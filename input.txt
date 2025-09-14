@@ -1,0 +1,19 @@
+// add new student
+
+{
+    "name": "sabari",
+  "email": "sab@gamil.com",
+  "startyear":2023,
+  "roll_number": "23csb36",
+  "register_number": "12sasaas1",
+  "mobile_number": "123431413",
+  "parent_mobile": "98321234"
+  
+}
+
+//   create caretaker
+
+{
+  "name":"mani",
+  "mobile_number":"1231231123"
+}
