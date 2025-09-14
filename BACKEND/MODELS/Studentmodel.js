@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import department from "./DepartmentModel";
 
 const StudentSchema = new mongoose.Schema({
   name: {
@@ -8,6 +9,10 @@ const StudentSchema = new mongoose.Schema({
   email: {
     type: String,
     require: true,
+  },
+  department:{
+    type:String,
+    require:true
   },
   startyear:
   { 

@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
+import department from "./DepartmentModel";
 
 const AdvisorSchema = new mongoose.Schema({
   Advisor_name: {
     type: String,
     require: true,
   },
-    password:{
-     type: String,
-    default: "ADVISOR",
-  },
   Advisor_mobile_number:{
     type:Number,
+    require:true
+  },
+  department:{
+    type:String,
     require:true
   },
    type: {

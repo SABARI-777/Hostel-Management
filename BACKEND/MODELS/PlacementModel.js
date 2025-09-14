@@ -10,7 +10,12 @@ Batch_type:{
     type:Number,
     require:true,
     enum:[1,2,3,4,5,6]
-  }
+  },
+  studentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+        required: true,
+      },
 });
 
 const Placement = new mongoose.model("Placement", PlacementSchema, "Placement");

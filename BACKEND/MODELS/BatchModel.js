@@ -15,7 +15,12 @@ const PlacementBatchSchema = new mongoose.Schema({
     Type:Boolean,
     require:true,
     enum:[true,false]
-  }
+  },
+  studentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+        required: true,
+      },
 });
 
 const PlacementBatch = new mongoose.model("PlacementBatch", PlacementBatchSchema, "PlacementBatch");

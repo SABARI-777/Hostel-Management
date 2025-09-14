@@ -17,6 +17,11 @@ const CaretakerSchema = new mongoose.Schema({
     type: String,
     default: "CARETAKER",
   },
+   studentId: {
+         type: mongoose.Schema.Types.ObjectId,
+         ref: "Student",
+         required: true,
+       },
 });
 
 const Caretaker = new mongoose.model("Caretaker", CaretakerSchema, "Caretaker");

@@ -9,6 +9,11 @@ const RoomSchema = new mongoose.Schema({
      type: String,
      require:true
    },
+   studentId: {
+         type: mongoose.Schema.Types.ObjectId,
+         ref: "Student",
+         required: true,
+       }
 });
 
 const Room = new mongoose.model("Room", RoomSchema, "Room");

@@ -10,6 +10,16 @@ const DepartmentSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
+  studentId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Student",
+        required: true,
+      },
+  AdvisorId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Advisor",
+        required: true,
+      },
 });
 
 const department = new mongoose.model("Department", DepartmentSchema, "Department");
