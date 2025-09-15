@@ -5,11 +5,6 @@ const CaretakerSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
-  UserID: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
   Status: {
     type: String,
     enum: ["ACTIVE", "INACTIVE"],
@@ -19,6 +14,11 @@ const CaretakerSchema = new mongoose.Schema({
     type: String,
     require: true,
     enum: ["A", "B", "C", "D"],
+  },
+  UserID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
 });
 

@@ -16,7 +16,7 @@ export const LoginCaretaker = async (req, res) => {
 return res.status(400).json({ message: "ENTER CORRECT PASSWORD.." });
     }
 
-    const caretaker = await Caretaker.findOne({ Username });
+    const caretaker = await Caretaker.findOne({ Email:Username });
 
     if (!caretaker) {
       return res.send("NO caretakerDATA IS THERE");

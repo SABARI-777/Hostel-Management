@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema({
   Password: {
     type: String,
     require: true,
-    minlength: 6,
+    minlength: 4,
   },
   MobileNumber: {
     type: String,
@@ -20,6 +20,8 @@ const UserSchema = new mongoose.Schema({
     enum: ["STUDENT", "ADVISOR", "CARETAKER", "ADMIN"],
   },
 });
+
+
 
 const User = new mongoose.model("User", UserSchema, "User");
 

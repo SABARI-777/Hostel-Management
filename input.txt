@@ -1,3 +1,10 @@
+//add user 
+
+"Email":"sabari",
+"Password":"1234",
+"MobileNumber":"7904761774"
+"type":"STUDENT",
+
 // add new student
 
 {
@@ -13,7 +20,13 @@
 
 //   create caretaker
 
-{
-  "name":"mani",
-  "mobile_number":"1231231123"
-}
+ 
+  // Name, Email, Password, MobileNumber, Status, HostelBlock
+ {
+  "Name":"Vijay",
+  "Email":"vijay@gmail",
+  "Password":"CARETAKER",
+  "MobileNumber":"12341331",
+  "Status":"ACTIVE",
+  "HostelBlock":"A"
+ }

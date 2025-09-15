@@ -4,12 +4,12 @@ const PlacementSchema = new mongoose.Schema({
   BatchName: {
     type: String,
     require: true,
-    enum: ["AZ,BC,SDE0,SDE1,AIML"],
+    enum: ["AZ","BC","SDE0","SDE1","AIML"],
   },
   Days: {
     type: [String],
     require: true,
-    enum: ["MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY"],
+    enum: ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"],
   },
   ClassTiming: {
     Start: {

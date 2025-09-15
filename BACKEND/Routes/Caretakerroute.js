@@ -1,13 +1,23 @@
 import express from "express";
 
-import { CreateNewCaretaker,GetCaretaker,GetCaretakerByID,DeleteCaretaker, UpdateCaretaker} from "../Controllers/CaretakeController.js";
+import {
+  CreateNewCaretaker,
+  GetCaretakers,
+  GetCaretakerByID,
+  DeleteCaretaker,
+  UpdateCaretaker,
+} from "../Controllers/CaretakeController.js";
 
 const CaretakerRouter = express.Router();
 
-CaretakerRouter.post("/add/caretaker", CreateNewCaretaker);
-CaretakerRouter.get("/get/caretakers", GetCaretaker);
-CaretakerRouter.get("/get/caretakers/", GetCaretakerByID);
-CaretakerRouter.patch("/update/caretaker", UpdateCaretaker);
-CaretakerRouter.delete("/delete/caretakers/", DeleteCaretaker);
+// caretaker routes
+CaretakerRouter.get("/detail/", GetCaretakerByID);
+
+//admin routes
+
+CaretakerRouter.post("/add/", CreateNewCaretaker);
+CaretakerRouter.get("/details/", GetCaretakers);
+CaretakerRouter.patch("/update/", UpdateCaretaker);
+CaretakerRouter.delete("/delete/", DeleteCaretaker);
 
 export default CaretakerRouter;

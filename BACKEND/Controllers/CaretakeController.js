@@ -1,45 +1,70 @@
-import mongoose from "mongoose";
 import Caretaker from "../MODELS/Caretakermodel.js";
+import User from "../MODELS/UserModel.js";
 
 export const CreateNewCaretaker = async (req, res) => {
   try {
-    const { Username, password, mobile_number } = req.body;
+    const { Name, Email, Password, MobileNumber, Status, HostelBlock } =
+      req.body;
 
-    if (password != "CARETAKER") {
+    if (Password != "CARETAKER") {
       return res.status(400).json({ message: "ENTER CORRECT PASSWORD.." });
     }
 
-    if (!Username) {
-      return res.status(400).json({ message: "Enter Username ....." });
+    if (!Name || !Email || !MobileNumber || !Status || !HostelBlock) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
-    if (!mobile_number) {
-      return res.status(400).json({ message: "Enter mobile_number.." });
+    const existingUser = await User.findOne({ Email, Password });
+
+    if (!existingUser) {
+      return res
+        .status(400)
+        .json({ message: "User Not found this email and password !" });
     }
 
-    const NewCaretaker = await new Caretaker({ Username, mobile_number });
+    const CaretakerExist = await Caretaker.findOne({
+      UserID: existingUser._id,
+    });
+
+    if (CaretakerExist) {
+      return res
+        .status(201)
+        .json({ message: "This caretaker already exists !" });
+    }
+
+    const NewCaretaker = await new Caretaker({
+      Name,
+      Status,
+      HostelBlock,
+      UserID: existingUser._id,
+    });
 
     await NewCaretaker.save();
 
     res
       .status(201)
-      .json({ message: "caretaker Created Successfully", data: NewCaretaker });
+      .json({
+        message: Name + " caretaker Created Successfully",
+        data: NewCaretaker,
+      });
   } catch (err) {
     return res.status(401).json({ error: true, message: err.message });
   }
 };
 
-export const GetCaretaker = async (req, res) => {
+export const GetCaretakers = async (req, res) => {
   try {
-    const caretaker = await Caretaker.find();
+    const caretaker = await Caretaker.find().populate("UserID");
 
     if (!caretaker) {
       return res.send("NO caretakerDATA IS THERE");
     }
+    console.log();
 
-    return res
-      .status(201)
-      .json({ message: "all caretaker details", data: caretaker });
+    return res.status(201).json({
+      message: "all caretaker details",
+      data1: caretaker,
+    });
   } catch (err) {
     return res.status(401).json({ error: true, message: err.message });
   }
@@ -53,7 +78,7 @@ export const GetCaretakerByID = async (req, res) => {
       return res.status(400).json({ message: "Enter ID" });
     }
 
-    const caretaker = await Caretaker.findOne(ID);
+    const caretaker = await Caretaker.findOne({ _id: ID }).populate("UserID");
 
     if (!caretaker) {
       res.send("NO caretaker IS THERE");
@@ -69,35 +94,28 @@ export const GetCaretakerByID = async (req, res) => {
 
 export const UpdateCaretaker = async (req, res) => {
   try {
-    const { _id, name, mobile_number } = req.body;
+    const { _id, Name, Email, Password, MobileNumber, Status, HostelBlock } =
+      req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: "Enter email ....." });
+    if (Password != "CARETAKER") {
+      return res.status(400).json({ message: "ENTER CORRECT PASSWORD.." });
     }
 
-    if (!mobile_number) {
-      return res.status(400).json({ message: "Enter password.." });
-    }
-
-    if (!_id) {
-      return res.status(400).json({ message: "Enter ID" });
+    if (!Name || !Email || !MobileNumber || !Status || !HostelBlock) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
     const data = await Caretaker.findOneAndUpdate(
       { _id },
-      { name, mobile_number },
+      { Name, Email, Password, MobileNumber, Status, HostelBlock },
       { new: true }
-    );
+    ).populate("UserID");
 
     if (!data) {
       res.send("NO caretakerDATA IS THERE");
     }
 
-    const caretaker = await Caretaker({ name, mobile_number });
-
-    return res
-      .status(201)
-      .json({ message: "get Successfully", data: caretaker });
+    return res.status(201).json({ message: "update Successfully", data: data });
   } catch (err) {
     return res.status(401).json({ error: true, message: err.message });
   }
@@ -111,7 +129,9 @@ export const DeleteCaretaker = async (req, res) => {
       return res.status(400).json({ message: "Enter ID" });
     }
 
-    const caretaker = await Caretaker.findOneAndDelete({ _id: id });
+    const caretaker = await Caretaker.findOneAndDelete({ _id: id }).populate(
+      "UserID"
+    );
 
     if (!caretaker) {
       res.send("NO caretakerDATA IS THERE");

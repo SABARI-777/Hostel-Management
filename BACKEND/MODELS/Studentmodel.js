@@ -34,7 +34,7 @@ const StudentSchema = new mongoose.Schema({
     required: true,
   },
 
-  ParentMobile: {
+  ParentMobileNumber: {
     type: String,
     require: true,
   },

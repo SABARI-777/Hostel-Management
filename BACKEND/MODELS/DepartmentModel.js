@@ -1,22 +1,21 @@
 import mongoose from "mongoose";
 
 const DepartmentSchema = new mongoose.Schema({
-  
   DepartmentName: {
     type: String,
     require: true,
-    enum: ["CSE,ECE,IT,MECH,EEE,AIDS"],
+    enum: ["CSE", "ECE", "IT", "MECH", "EEE", "AIDS"],
   },
-  HodNAME: {
+  HodName: {
     type: String,
     require: true,
   },
 });
 
-const Department = new mongoose.model(
+const DepartmentModel = new mongoose.model(
   "Department",
   DepartmentSchema,
   "Department"
 );
 
-export default Department;
+export default DepartmentModel;

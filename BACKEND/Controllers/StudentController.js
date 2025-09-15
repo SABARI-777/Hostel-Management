@@ -5,12 +5,19 @@ import Caretaker from "../MODELS/Caretakermodel.js";
 export const CreateNewStudent = async (req, res) => {
   try {
     const {
-      name,
-      email,
-      roll_number,
-      register_number,
-      mobile_number,
-      parent_mobile,
+      Name,
+      Gender,
+      StartYear,
+      Email,
+      Section,
+      RollNumber,
+      RegisterNumber,
+      Status,
+      MobileNumber,
+      ParentMobileNumber,
+      DepartmentName,
+      BatchName,
+      
     } = req.body;
 
     if (!name) {
