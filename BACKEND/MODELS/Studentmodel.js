@@ -1,44 +1,68 @@
 import mongoose from "mongoose";
-import department from "./DepartmentModel";
 
 const StudentSchema = new mongoose.Schema({
-  name: {
+  Name: {
     type: String,
     require: true,
   },
-  email: {
+  Gender: {
     type: String,
     require: true,
   },
-  department:{
-    type:String,
-    require:true
+  StartYear: {
+    type: Number,
+    require: true,
+    min: 2000,
+    max: new Date().getFullYear() + 5,
   },
-  startyear:
-  { 
-    type:Number,
-    require:true,
-    enum:[2020,2021,2022,2023,2024,2025,2026,2027]
-  },
-  roll_number: {
+  Section: {
     type: String,
     require: true,
   },
-  register_number: {
+  RollNumber: {
     type: String,
     require: true,
   },
-  mobile_number: {
+  RegisterNumber: {
     type: String,
     require: true,
   },
-  parent_mobile: {
+  Status: {
+    type: String,
+    enum: ["ACTIVE", "GRADUATED", "DROPPED", "SUSPENDED", "PENDING"],
+    default: "ACTIVE",
+    required: true,
+  },
+
+  ParentMobile: {
     type: String,
     require: true,
   },
-  type: {
-    type: String,
-    default: "STUDENT",
+  UserID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
+  DepartmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department",
+    required: true,
+  },
+  PlacementId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Placement",
+    required: true,
+  },
+  RoomId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Room",
+    required: true,
+  },
+  AdvisorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Advisor",
+    required: true,
   },
 });
 

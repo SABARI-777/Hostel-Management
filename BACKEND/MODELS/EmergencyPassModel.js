@@ -2,31 +2,46 @@ import mongoose from "mongoose";
 
 const EmergencyPassSchema = new mongoose.Schema(
   {
-    outDateTime: {
+    OutDateTime: {
       type: Date,
       required: true,
       default: Date.now,
     },
-    document:{
-        type:String,
-        require:true,
+    Document: {
+      type: String,
+      require: true,
     },
-    inDateTime: {
+    InDateTime: {
       type: Date,
       required: false,
       default: Date.now,
     },
-
-    studentId: {
+    StudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
     },
-
-    caretakerID: {
+    CaretakerID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Caretaker",
       required: true,
+    },
+    Place: {
+      type: String,
+      require: true,
+    },
+    Purpose: {
+      type: String,
+      require: true,
+    },
+    Status: {
+      type: String,
+      enum: ["OUT", "IN"],
+      default: "OUT",
+    },
+    Approved: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -34,8 +49,10 @@ const EmergencyPassSchema = new mongoose.Schema(
   }
 );
 
-const Emergencypass = mongoose.model("Emergencypass", EmergencyPassSchema,"Emergencypass");
+const EmergencyPass = mongoose.model(
+  "EmergencyPass",
+  EmergencyPassSchema,
+  "EmergencyPass"
+);
 
-export default Emergencypass;
-
-// EMERGENCY 
+export default EmergencyPass;

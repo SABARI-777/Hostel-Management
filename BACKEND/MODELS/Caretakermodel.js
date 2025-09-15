@@ -1,27 +1,25 @@
 import mongoose from "mongoose";
 
 const CaretakerSchema = new mongoose.Schema({
-  Username: {
+  Name: {
     type: String,
     require: true,
   },
-  password:{
-     type: String,
-    default: "CARETAKER",
+  UserID: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
-  mobile_number: {
+  Status: {
+    type: String,
+    enum: ["ACTIVE", "INACTIVE"],
+    default: "ACTIVE",
+  },
+  HostelBlock: {
     type: String,
     require: true,
+    enum: ["A", "B", "C", "D"],
   },
-  type: {
-    type: String,
-    default: "CARETAKER",
-  },
-   studentId: {
-         type: mongoose.Schema.Types.ObjectId,
-         ref: "Student",
-         required: true,
-       },
 });
 
 const Caretaker = new mongoose.model("Caretaker", CaretakerSchema, "Caretaker");

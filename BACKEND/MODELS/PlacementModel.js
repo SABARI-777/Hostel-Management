@@ -1,21 +1,31 @@
 import mongoose from "mongoose";
 
 const PlacementSchema = new mongoose.Schema({
-  Batch_name:{
+  BatchName: {
     type: String,
     require: true,
-    enum:["AZ,BC,SDE0,SDE1,AIML"]
+    enum: ["AZ,BC,SDE0,SDE1,AIML"],
   },
-Batch_type:{
-    type:Number,
-    require:true,
-    enum:[1,2,3,4,5,6]
+  Days: {
+    type: [String],
+    require: true,
+    enum: ["MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY"],
   },
-  studentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Student",
-        required: true,
-      },
+  ClassTiming: {
+    Start: {
+      type: Date,
+      required: true,
+    },
+    End: {
+      type: Date,
+      required: true,
+    },
+  },
+  Status: {
+    type: String,
+    enum: ["UPCOMING", "ONGOING", "COMPLETED"],
+    default: "UPCOMING",
+  },
 });
 
 const Placement = new mongoose.model("Placement", PlacementSchema, "Placement");

@@ -2,27 +2,42 @@ import mongoose from "mongoose";
 
 const GeneralPassSchema = new mongoose.Schema(
   {
-    outDateTime: {
+    OutDateTime: {
       type: Date,
       required: true,
       default: Date.now,
     },
-    inDateTime: {
+    InDateTime: {
       type: Date,
       required: false,
-      default:Date.now
+      default: Date.now,
     },
-
-    studentId: {
+    StudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
       required: true,
     },
-
-    caretakerID: {
+    CaretakerID: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Caretaker",
       required: true,
+    },
+    Place: {
+      type: String,
+      require: true,
+    },
+    Purpose: {
+      type: String,
+      require: true,
+    },
+    Status: {
+      type: String,
+      enum: ["OUT", "IN"],
+      default: "OUT",
+    },
+    Approved: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -30,6 +45,10 @@ const GeneralPassSchema = new mongoose.Schema(
   }
 );
 
-const GeneralPass = mongoose.model("GeneralPass", GeneralPassSchema, "GeneralPass");
+const GeneralPass = mongoose.model(
+  "GeneralPass",
+  GeneralPassSchema,
+  "GeneralPass"
+);
 
 export default GeneralPass;

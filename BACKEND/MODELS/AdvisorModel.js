@@ -1,23 +1,25 @@
 import mongoose from "mongoose";
-import department from "./DepartmentModel";
 
 const AdvisorSchema = new mongoose.Schema({
-  Advisor_name: {
+  Name: {
     type: String,
     require: true,
   },
-  Advisor_mobile_number:{
-    type:Number,
-    require:true
+  UserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
-  department:{
-    type:String,
-    require:true
-  },
-   type: {
+  Designation: {
     type: String,
-    default: "ADVISOR",
-  }
+    enum: ["Assistant Professor", "Associate Professor", "Professor", "HOD"],
+    default: "Assistant Professor",
+  },
+  DepartmentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Department",
+    required: true,
+  },
 });
 
 const Advisor = new mongoose.model("Advisor", AdvisorSchema, "Advisor");
