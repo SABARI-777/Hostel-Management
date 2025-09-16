@@ -7,11 +7,6 @@ const AttendanceSchema = new mongoose.Schema(
       required: false,
       default: Date.now,
     },
-    OutDateTime: {
-      type: Date,
-      required: true,
-      default: Date.now,
-    },
     StudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
@@ -19,8 +14,12 @@ const AttendanceSchema = new mongoose.Schema(
     },
     Status: {
       type: String,
-      enum: ["IN", "OUT"],
       default: "OUT",
+    },
+    RoomId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
+      required: true,
     },
     EntryType: {
       type: String,
@@ -39,4 +38,4 @@ const AttendanceDetails = mongoose.model(
   "AttendanceDetails"
 );
 
-export default "AttendanceDetails";
+export default AttendanceDetails;

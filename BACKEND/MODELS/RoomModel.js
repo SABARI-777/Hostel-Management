@@ -19,8 +19,8 @@ const RoomSchema = new mongoose.Schema({
   },
   Occupancy: {
     type: Number,
-    default: 0,
-    min: 0,
+    min:0,
+    require: true,
   },
 });
 

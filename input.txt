@@ -1,21 +1,30 @@
 //add user 
 
+{
 "Email":"sabari",
-"Password":"1234",
-"MobileNumber":"7904761774"
-"type":"STUDENT",
+"Password":"ADVISOR",
+"MobileNumber":"7904761774",
+"Type":"ADVISOR"
+}
 
 // add new student
 
 {
-    "name": "sabari",
-  "email": "sab@gamil.com",
-  "startyear":2023,
-  "roll_number": "23csb36",
-  "register_number": "12sasaas1",
-  "mobile_number": "123431413",
-  "parent_mobile": "98321234"
-  
+    {
+      "Name" :"GOPI",
+      "Gender":"Male",
+      "StartYear":2023,
+      "Email":"sabari@gmail",
+      "Section":"A",
+      "RollNumber":"23ECEB36",
+      "RegisterNumber":"721223104099",
+      "Status":"ACTIVE",
+      "ParentMobileNumber":"97523413432",
+      "DepartmentName":"EEE",
+      "BatchName":"AZ",
+      "RoomNumber":214,
+      "AdvisorName":"MANO"
+}
 }
 
 //   create caretaker
@@ -30,3 +39,65 @@
   "Status":"ACTIVE",
   "HostelBlock":"A"
  }
+
+
+//ADD ADVISOR
+
+
+{
+             "Name": "SABARI",
+            "Email": "sabari",
+             "Password": "ADVISOR",
+            "Designation":"Assistant Professor",
+            "DepartmentName":"CSE"
+}
+
+{
+
+  // add rooms
+  {
+	"RoomName":215,
+     "HostelBlock":"B", 
+     "Capacity":4,
+     "Occupancy":1
+}
+}
+
+
+// add batch
+{
+    "BatchName": "SDE2",
+    "Days": ["TUESDAY", "THURSDAY"],
+    "ClassTiming": {
+        "Start": "08:00",
+        "End": "10:00"
+    },
+    "Status": "ONGOING"
+}
+
+
+// update student 
+
+{
+    "_id" :"68c979bd503dc93a6c22d33f",      
+      "Name" :"VETRI",
+      "Gender":"Male",
+      "StartYear":2023,
+      "Email":"sabari@gmail",
+      "Section":"A",
+      "RollNumber":"23ECEB36",
+      "RegisterNumber":"721223104099",
+      "Status":"ACTIVE",
+      "ParentMobileNumber":"97523413432"
+}
+
+// add entry attendace
+
+{
+     
+    "Name":"VETRI",
+    "Status":"NO",
+    "EntryType":"MANUAL"
+}
+
+//

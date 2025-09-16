@@ -1,24 +1,21 @@
 import mongoose from "mongoose";
-
 const AdvisorSchema = new mongoose.Schema({
   Name: {
     type: String,
     require: true,
-  },
-  UserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
   },
   Designation: {
     type: String,
     enum: ["Assistant Professor", "Associate Professor", "Professor", "HOD"],
     default: "Assistant Professor",
   },
+  UserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
   DepartmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
-    required: true,
   },
 });
 

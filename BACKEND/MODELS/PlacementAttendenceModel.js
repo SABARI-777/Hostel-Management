@@ -14,7 +14,7 @@ const PlacementAttendancePassSchema = new mongoose.Schema(
     },
     Status: {
       type: String,
-      enum: ["OUT", "IN"],
+      enum: ["OUT","IN"],
       default: "OUT",
     },
     StudentId: {
@@ -22,10 +22,22 @@ const PlacementAttendancePassSchema = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
+    RoomId:{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Room",
+          required: true,
+        },
     PlacementId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Placement",
+      require:true,
     },
+     EntryType: {
+      type: String,
+      enum: ["BIOMETRIC", "MANUAL"],
+      default: "BIOMETRIC",
+    },
+
   },
   {
     timestamps: true,

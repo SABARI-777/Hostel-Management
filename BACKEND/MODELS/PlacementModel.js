@@ -4,7 +4,7 @@ const PlacementSchema = new mongoose.Schema({
   BatchName: {
     type: String,
     require: true,
-    enum: ["AZ","BC","SDE0","SDE1","AIML"],
+    enum: ["AZ","BC","SDE0","SDE1","AIML","SDE2","MERN","DB"],
   },
   Days: {
     type: [String],
@@ -13,11 +13,11 @@ const PlacementSchema = new mongoose.Schema({
   },
   ClassTiming: {
     Start: {
-      type: Date,
+      type: String,
       required: true,
     },
     End: {
-      type: Date,
+      type: String,
       required: true,
     },
   },
@@ -31,3 +31,4 @@ const PlacementSchema = new mongoose.Schema({
 const Placement = new mongoose.model("Placement", PlacementSchema, "Placement");
 
 export default Placement;
+

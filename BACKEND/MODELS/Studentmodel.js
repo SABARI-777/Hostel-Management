@@ -18,6 +18,7 @@ const StudentSchema = new mongoose.Schema({
   Section: {
     type: String,
     require: true,
+    enum: ["A", "B", "C"],
   },
   RollNumber: {
     type: String,
@@ -38,7 +39,7 @@ const StudentSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
-  UserID: {
+  UserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
