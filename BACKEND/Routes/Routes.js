@@ -9,7 +9,7 @@ import RoomRouter from "./RoomRoute.js";
 import AttendanceRouter from "./Attendaceroute.js";
 import PlacementAttendanceRouter from "./PlacementAttendanceRoute.js";
 import BatchRouter from "./PlacementRoute.js";
-
+import OutPassRouter from "./OutpassRouter.js";
 const Routes = express.Router();
 
 Routes.use("/user", Userrouter);
@@ -28,14 +28,12 @@ Routes.use("/Admin", RoomRouter);
 
 Routes.use("/Admin", BatchRouter);
 
-
 Routes.use("/Admin", StudentRouter);
 
-Routes.use("/Admin",AttendanceRouter);
+Routes.use("/Admin", AttendanceRouter);
 
-Routes.use("/Admin",PlacementAttendanceRouter);
+Routes.use("/Admin", PlacementAttendanceRouter);
 
-
-
+Routes.use("/Admin", OutPassRouter);
 
 export default Routes;

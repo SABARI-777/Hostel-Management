@@ -37,8 +37,18 @@ const OutPassSchema = new mongoose.Schema(
       default: "OUT",
     },
     approved: {
-      type: Boolean,
-      default: false,
+      type: String,
+      require: true,
+      default: "NO",
+    },
+    EntryType: {
+      type: String,
+      require: true,
+      enum: ["MANUAL", "BIOMATRIC"],
+    },
+    Type: {
+      type: String,
+      default: "Outpass",
     },
   },
   { timestamps: true }
