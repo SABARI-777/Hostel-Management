@@ -93,8 +93,11 @@ export const UpdateAttendance = async (req, res) => {
         Status,
         RoomId: existingStudent.RoomId,
         EntryType,
-      }
-    );
+      },
+      { new: true }
+    )
+      .populate("StudentId")
+      .populate("RoomId");
 
     await updatedAttendaceDetails.save();
 

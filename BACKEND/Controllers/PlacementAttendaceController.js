@@ -77,7 +77,7 @@ export const GetPlacementAttendacedetails = async (req, res) => {
 
 export const UpdatePlacementAttendance = async (req, res) => {
   try {
-    const { _ID, OutDateTime, Name, Status, EntryType } = req.body;
+    const { _id, OutDateTime, Name, Status, EntryType } = req.body;
 
     if (!Name) {
       return res.status(400).json({ message: "Enter student name" });
@@ -97,7 +97,7 @@ export const UpdatePlacementAttendance = async (req, res) => {
 
     const updatedPlacementAttendaceDetails =
       await PlacementAttendanceDetails.findOneAndUpdate(
-        { _ID },
+        { _id },
         {
           OutDateTime,
           InDateTime,
@@ -105,7 +105,8 @@ export const UpdatePlacementAttendance = async (req, res) => {
           Status,
           RoomId: existingStudent.RoomId,
           EntryType,
-        }
+        },
+        { new: true }
       )
         .populate("StudentId")
         .populate("RoomId")
