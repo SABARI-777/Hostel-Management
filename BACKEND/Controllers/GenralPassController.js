@@ -24,7 +24,6 @@ export const createNewHomePass = async (req, res) => {
       !OutDateTime ||
       !Status ||
       !EntryType ||
-      !approved ||
       !CaretakerName
     ) {
       return res.status(400).json({ message: "ENTER ALL FIELDS" });

@@ -10,6 +10,7 @@ import AttendanceRouter from "./Attendaceroute.js";
 import PlacementAttendanceRouter from "./PlacementAttendanceRoute.js";
 import BatchRouter from "./PlacementRoute.js";
 import OutPassRouter from "./OutpassRouter.js";
+import ApprovealRouter from "./ApproveRoute.js";
 import EmergencypassRoute from "./EmergencyRoute.js";
 import GenralpassRoute from "./GenralPassRoute.js";
 const Routes = express.Router();
@@ -19,6 +20,7 @@ Routes.use("/caretaker", CaretakerRouter);
 
 // ADMIN ROUTERS
 
+Routes.use("/Admin", ApprovealRouter);
 Routes.use("/Admin", Userrouter);
 
 Routes.use("/Admin", CaretakerRouter);

@@ -4,6 +4,7 @@ import Student from "../MODELS/Studentmodel.js";
 // ---------------- CREATE ----------------
 export const EntryAttendance = async (req, res) => {
   try {
+    
     const { Name, Status, EntryType } = req.body;
 
     if (!Name) {
