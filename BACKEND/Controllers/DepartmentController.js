@@ -1,115 +1,120 @@
 import DepartmentModel from "../MODELS/DepartmentModel.js";
 
+// ================== CREATE DEPARTMENT ==================
 export const AddDepartment = async (req, res) => {
   try {
     const { DepartmentName } = req.body;
 
     if (!DepartmentName) {
-      return res.status(400).json({ message: "ENTER DEPARTMENT" });
+      return res.status(400).json({ message: "Department name is required." });
     }
 
-    let HodName;
-    if (DepartmentName == "CSE") {
-      HodName = "KG";
-    } else if (DepartmentName == "SAH") {
-      HodName = "PN";
-    } else if (DepartmentName == "IT") {
-      HodName = "DB";
-    } else if (DepartmentName == "ECE") {
-      HodName = "BK";
-    } else if (DepartmentName == "EEE") {
-      HodName = "MK";
-    } else if (DepartmentName == "MECH") {
-      HodName = "AK";
-    } else if (DepartmentName == "AIDS") {
-      HodName = "JK";
+    // HOD mapping
+    const hodMap = {
+      CSE: "KG",
+      SAH: "PN",
+      IT: "DB",
+      ECE: "BK",
+      EEE: "MK",
+      MECH: "AK",
+      AIDS: "JK",
+    };
+
+    const HodName = hodMap[DepartmentName] || "Not Assigned";
+
+    // Prevent duplicate department creation
+    const existingDept = await DepartmentModel.findOne({ DepartmentName });
+    if (existingDept) {
+      return res.status(409).json({ message: "Department already exists." });
     }
-    console.log(DepartmentName);
-    console.log(HodName);
 
-    const department = await new DepartmentModel({ DepartmentName, HodName });
-
+    const department = new DepartmentModel({ DepartmentName, HodName });
     await department.save();
 
     return res.status(201).json({
-      message: "Department added successfully :",
-      department,
+      message: "Department added successfully.",
+      data: department,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error adding department.",
+      error: err.message,
+    });
+  }
+};
+
+// ================== GET ALL DEPARTMENTS ==================
+export const GetDepartments = async (req, res) => {
+  try {
+    const departments = await DepartmentModel.find();
+
+    if (!departments || departments.length === 0) {
+      return res.status(404).json({ message: "No departments found." });
+    }
+
+    return res.status(200).json({
+      message: "Departments fetched successfully.",
+      data: departments,
     });
   } catch (err) {
     return res
-      .status(400)
-      .json({ message: "Error on add department file", error: err });
+      .status(500)
+      .json({ message: "Error fetching departments.", error: err.message });
   }
 };
 
-export const GetDepartments = async (req, res) => {
-  try {
-    const department = await DepartmentModel.find();
-
-    if (!department) {
-      return res.status(400).json({ message: "Nothing Department ....." });
-    }
-
-    return res
-      .status(201)
-      .json({ message: "Department details", data: department });
-  } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
-  }
-};
-
+// ================== UPDATE DEPARTMENT ==================
 export const UpdateDepartment = async (req, res) => {
   try {
     const { _id, DepartmentName, HodName } = req.body;
 
-    if (!_id) {
-      return res.status(400).json({ message: "ENTER _id" });
+    if (!_id || !DepartmentName || !HodName) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
-    if (!DepartmentName) {
-      return res.status(400).json({ message: "ENTER DEPARTMENTNAME" });
-    }
-
-    if (!HodName) {
-      return res.status(400).json({ message: "ENTER HOD NAME" });
-    }
-
-    const department = await DepartmentModel.findOneAndUpdate(
-      { _id },
+    const department = await DepartmentModel.findByIdAndUpdate(
+      _id,
       { DepartmentName, HodName },
       { new: true }
     );
 
     if (!department) {
-      return res.status(400).json({ message: "NO Department DETAILS ....." });
+      return res.status(404).json({ message: "Department not found." });
     }
 
-    return res
-      .status(201)
-      .json({ message: "Department details", data: department });
+    return res.status(200).json({
+      message: "Department updated successfully.",
+      data: department,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res
+      .status(500)
+      .json({ message: "Error updating department.", error: err.message });
   }
 };
 
+// ================== DELETE DEPARTMENT ==================
 export const DeleteDepartment = async (req, res) => {
   try {
     const { _id } = req.body;
 
     if (!_id) {
-      return res.status(400).json({ message: "ENTER _id" });
+      return res.status(400).json({ message: "Department ID is required." });
     }
 
-    const department = await DepartmentModel.findOneAndDelete({ _id });
+    const department = await DepartmentModel.findByIdAndDelete(_id);
 
     if (!department) {
-      return res.status(400).json({ message: "NO Department DETAILS ....." });
+      return res.status(404).json({ message: "Department not found." });
     }
 
-    return res
-      .status(201)
-      .json({ message: "Department details", data: department });
+    return res.status(200).json({
+      message: "Department deleted successfully.",
+      data: department,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res
+      .status(500)
+      .json({ message: "Error deleting department.", error: err.message });
   }
 };

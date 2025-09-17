@@ -10,10 +10,10 @@ import {
 
 const Userrouter = express.Router();
 
-Userrouter.post("/add", CreateNewUser);
-Userrouter.get("/details", GetUsers);
+Userrouter.post("/u/add", CreateNewUser);
+Userrouter.get("/u/details", GetUsers);
 Userrouter.get("/detail", GetUserByID);
-Userrouter.patch("/update", UpdateUser);
-Userrouter.delete("/delete", DeleteUser);
+Userrouter.patch("/u/update", UpdateUser);
+Userrouter.delete("/u/delete", DeleteUser);
 
 export default Userrouter;

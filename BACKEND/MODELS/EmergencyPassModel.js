@@ -7,24 +7,18 @@ const EmergencyPassSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
-    Document: {
-      type: String,
-      require: true,
-    },
     InDateTime: {
       type: Date,
       required: false,
       default: Date.now,
     },
-    StudentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      required: true,
+    Document: {
+      type: String,
+      require: true,
     },
-    CaretakerID: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Caretaker",
-      required: true,
+    Year:{
+      type:Number,
+      require:true,
     },
     Place: {
       type: String,
@@ -39,9 +33,28 @@ const EmergencyPassSchema = new mongoose.Schema(
       enum: ["OUT", "IN"],
       default: "OUT",
     },
-    Approved: {
-      type: Boolean,
-      default: false,
+    approved: {
+      type: String,
+      default: "NO",
+    },
+    EntryType: {
+      type: String,
+      require: true,
+      enum: ["MANUAL", "BIOMATRIC"],
+    },
+    StudentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      required: true,
+    },
+    CaretakerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Caretaker",
+      required: true,
+    },
+    Type: {
+      type: String,
+      default: "Genralpass",
     },
   },
   {

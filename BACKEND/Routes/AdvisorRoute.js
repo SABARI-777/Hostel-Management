@@ -9,9 +9,9 @@ import {
 
 const AdvisorRouter = express.Router();
 
-AdvisorRouter.post("/advisor/add", AddAdvisor);
-AdvisorRouter.get("/advisor/get", getAdvisor);
-AdvisorRouter.patch("/advisor/update", UpdateAdvisor);
-AdvisorRouter.delete("/advisor/delete", DeleteAdvisor);
+AdvisorRouter.post("/a/add", AddAdvisor);
+AdvisorRouter.get("/a/details", getAdvisor);
+AdvisorRouter.patch("/a/update", UpdateAdvisor);
+AdvisorRouter.delete("/a/delete", DeleteAdvisor);
 
 export default AdvisorRouter;

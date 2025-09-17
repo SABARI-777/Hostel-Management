@@ -38,7 +38,7 @@ const OutPassSchema = new mongoose.Schema(
     },
     approved: {
       type: String,
-      require: true,
+      // require: true,
       default: "NO",
     },
     EntryType: {

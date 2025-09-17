@@ -12,32 +12,42 @@ const GeneralPassSchema = new mongoose.Schema(
       required: false,
       default: Date.now,
     },
-    StudentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      required: true,
-    },
-    CaretakerID: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Caretaker",
-      required: true,
-    },
     Place: {
       type: String,
-      require: true,
+      required: true,
     },
     Purpose: {
       type: String,
-      require: true,
+      required: true,
     },
+    
     Status: {
       type: String,
       enum: ["OUT", "IN"],
       default: "OUT",
     },
     Approved: {
-      type: Boolean,
-      default: false,
+      type: String,
+      default: "NO",
+    },
+    EntryType: {
+      type: String,
+      required: true,
+      enum: ["MANUAL", "BIOMETRIC"], // fixed spelling
+    },
+    StudentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Student",
+      required: true,
+    },
+    CaretakerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Caretaker",
+      required: true,
+    },
+    Type: {
+      type: String,
+      default: "GeneralPass", // fixed typo
     },
   },
   {
@@ -45,10 +55,6 @@ const GeneralPassSchema = new mongoose.Schema(
   }
 );
 
-const GeneralPass = mongoose.model(
-  "GeneralPass",
-  GeneralPassSchema,
-  "GeneralPass"
-);
+const GeneralPass = mongoose.model("GeneralPass", GeneralPassSchema);
 
 export default GeneralPass;

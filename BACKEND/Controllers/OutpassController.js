@@ -2,107 +2,94 @@ import OutPass from "../MODELS/OutpassModel.js";
 import Student from "../MODELS/Studentmodel.js";
 import Caretaker from "../MODELS/Caretakermodel.js";
 
-export const GentrateOutpass = async (req, res) => {
+// ---------------- CREATE ----------------
+export const GenerateOutpass = async (req, res) => {
   try {
-    const { Name, Year, Place, Purpose, Status, approved, OutDateTime } =
-      req.body;
+    const {
+      Name,
+      Year,
+      Place,
+      Purpose,
+      OutDateTime,
+      EntryType,
+      CaretakerName,
+      Status,
+      approved, // set by caretaker, not student
+    } = req.body;
 
     if (
-      !Name ||
-      !Year ||
-      !Place ||
-      !Purpose ||
-      !OutDateTime ||
-      !Status ||
-      !approved
+      !Name || !Year || !Place || !Purpose ||
+      !OutDateTime || !EntryType || !CaretakerName
     ) {
-      return res.status(400).json({ message: "ENTER ALL FIELDS" });
+      return res.status(400).json({ message: "All fields are required." });
     }
 
-    const existingStudent = await Student.findOne({ Name });
+    const student = await Student.findOne({ Name });
+    if (!student) return res.status(404).json({ message: "Student not found!" });
 
-    if (!existingStudent) {
-      return res.status(404).json({ message: "Student not found!" });
-    }
+    const caretaker = await Caretaker.findOne({ Name: CaretakerName });
+    if (!caretaker) return res.status(404).json({ message: "Caretaker not found!" });
 
-    const caretaker = await Caretaker.findOne(
-      existingStudent.RoomId.HostelBlock
-    );
-
-    if (!caretaker) {
-      return res.status(404).json({ message: "Student not found!" });
-    }
-
-    const InDateTime = new Date();
-
-    const Outpassnew = await new OutPass({
+    const outpass = new OutPass({
       OutDateTime,
-      InDateTime,
-      StudentId: existingStudent._id,
+      InDateTime: new Date(),
+      StudentId: student._id,
       CaretakerId: caretaker._id,
       Place,
       Purpose,
-      Status,
-      approved,
+      Status: Status || "PENDING", // default
+      approved: approved || false, // default false
+      EntryType,
     });
 
-    await Outpassnew.save();
+    await outpass.save();
 
-    await Outpassnew.populate("StudentId").populate("CaretakerId");
-
-    return res
-      .status(201)
-      .json({ message: "outpass genrated ....", data: Outpassnew });
+    return res.status(201).json({
+      message: "Outpass generated successfully",
+      data: outpass,
+    });
   } catch (error) {
-    return res
-      .status(400)
-      .json({ message: "ERROR ON OUTPASSS !", err: error.message });
+    return res.status(500).json({ message: "Error generating outpass", error: error.message });
   }
 };
 
-export const GetoutpassDetails = async (req, res) => {
+// ---------------- READ ----------------
+export const GetOutpassDetails = async (req, res) => {
   try {
     const details = await OutPass.find()
       .populate("StudentId")
       .populate("CaretakerId");
 
-    if (!details) {
-      return res.status(500).json({ message: "NO OUTPASS RECORDS YET !" });
+    if (!details || details.length === 0) {
+      return res.status(404).json({ message: "No outpass records found." });
     }
 
-    return res
-      .status(200)
-      .json({ message: "All ATTENDACE RECORDS !", data: details });
-  } catch (error) {
     return res.status(200).json({
-      message: " error on get ATTENDACE RECORDS !",
-      error: error.message,
+      message: "All outpass records",
+      data: details,
     });
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching outpass records", error: error.message });
   }
 };
 
+// ---------------- UPDATE ----------------
 export const UpdateOutpass = async (req, res) => {
   try {
-    const { _id, Name, Place, Purpose, Status, approved, OutDateTime } =
-      req.body;
+    const {
+      _id, Name, Year, Place, Purpose, Status,
+      approved, OutDateTime, CaretakerName, EntryType,
+    } = req.body;
 
-    if (!_id) {
-      return res.status(400).json({ message: "Provide Outpass ID to update" });
-    }
+    if (!_id) return res.status(400).json({ message: "Outpass ID is required." });
 
-    const existingStudent = await Student.findOne({ Name });
-    if (!existingStudent) {
-      return res.status(404).json({ message: "Student not found!" });
-    }
+    const student = await Student.findOne({ Name });
+    if (!student) return res.status(404).json({ message: "Student not found!" });
 
-    const caretaker = await Caretaker.findOne(
-      existingStudent.RoomId.HostelBlock
-    );
-    if (!caretaker) {
-      return res.status(404).json({ message: "Caretaker not found!" });
-    }
+    const caretaker = await Caretaker.findOne({ Name: CaretakerName });
+    if (!caretaker) return res.status(404).json({ message: "Caretaker not found!" });
 
-    const updatedOutpass = await OutPass.findByIdAndUpdate(
+    const updated = await OutPass.findByIdAndUpdate(
       _id,
       {
         OutDateTime,
@@ -110,52 +97,38 @@ export const UpdateOutpass = async (req, res) => {
         Purpose,
         Status,
         approved,
-        StudentId: existingStudent._id,
+        EntryType,
+        StudentId: student._id,
         CaretakerId: caretaker._id,
       },
       { new: true }
-    )
-      .populate("StudentId")
-      .populate("CaretakerId");
+    );
 
-    if (!updatedOutpass) {
-      return res.status(404).json({ message: "Outpass record not found!" });
-    }
+    if (!updated) return res.status(404).json({ message: "Outpass not found." });
 
     return res.status(200).json({
       message: "Outpass updated successfully",
-      data: updatedOutpass,
+      data: updated,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Error while updating Outpass",
-      error: error.message,
-    });
+    return res.status(500).json({ message: "Error updating outpass", error: error.message });
   }
 };
 
+// ---------------- DELETE ----------------
 export const DeleteOutpass = async (req, res) => {
   try {
     const { _id } = req.body;
+    if (!_id) return res.status(400).json({ message: "Outpass ID is required." });
 
-    if (!_id) {
-      return res.status(400).json({ message: "Provide Outpass ID to delete" });
-    }
-
-    const deletedOutpass = await OutPass.findByIdAndDelete(_id);
-
-    if (!deletedOutpass) {
-      return res.status(404).json({ message: "Outpass record not found!" });
-    }
+    const deleted = await OutPass.findByIdAndDelete(_id);
+    if (!deleted) return res.status(404).json({ message: "Outpass not found." });
 
     return res.status(200).json({
       message: "Outpass deleted successfully",
-      data: deletedOutpass,
+      data: deleted,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Error while deleting Outpass",
-      error: error.message,
-    });
+    return res.status(500).json({ message: "Error deleting outpass", error: error.message });
   }
 };

@@ -1,146 +1,140 @@
 import Caretaker from "../MODELS/Caretakermodel.js";
 import User from "../MODELS/UserModel.js";
 
+// ---------------- CREATE ----------------
 export const CreateNewCaretaker = async (req, res) => {
   try {
-    const { Name, Email, Password, MobileNumber, Status, HostelBlock } =
-      req.body;
+    const { Name, Email, Status, HostelBlock } = req.body;
 
-    if (Password != "CARETAKER") {
-      return res.status(400).json({ message: "ENTER CORRECT PASSWORD.." });
-    }
-
-    if (!Name || !Email || !MobileNumber || !Status || !HostelBlock) {
+    if (!Name || !Email || !Status || !HostelBlock) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    const existingUser = await User.findOne({ Email, Password });
-
+    // Find existing user
+    const existingUser = await User.findOne({ Email });
     if (!existingUser) {
       return res
-        .status(400)
-        .json({ message: "User Not found this email and password !" });
+        .status(404)
+        .json({ message: "User not found with this email." });
     }
 
-    const CaretakerExist = await Caretaker.findOne({
+    // Check if caretaker already exists
+    const caretakerExists = await Caretaker.findOne({
       UserID: existingUser._id,
     });
-
-    if (CaretakerExist) {
-      return res
-        .status(201)
-        .json({ message: "This caretaker already exists !" });
+    if (caretakerExists) {
+      return res.status(400).json({ message: "Caretaker already exists." });
     }
 
-    const NewCaretaker = await new Caretaker({
+    const newCaretaker = new Caretaker({
       Name,
       Status,
       HostelBlock,
       UserID: existingUser._id,
     });
 
-    await NewCaretaker.save();
+    await newCaretaker.save();
 
-    res
-      .status(201)
-      .json({
-        message: Name + " caretaker Created Successfully",
-        data: NewCaretaker,
-      });
+    return res.status(201).json({
+      message: "Caretaker created successfully",
+      data: newCaretaker,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ---------------- READ ----------------
 export const GetCaretakers = async (req, res) => {
   try {
-    const caretaker = await Caretaker.find().populate("UserID");
+    const caretakers = await Caretaker.find().populate("UserID");
 
-    if (!caretaker) {
-      return res.send("NO caretakerDATA IS THERE");
+    if (!caretakers || caretakers.length === 0) {
+      return res.status(404).json({ message: "No caretakers found." });
     }
-    console.log();
 
-    return res.status(201).json({
-      message: "all caretaker details",
-      data1: caretaker,
+    return res.status(200).json({
+      message: "All caretaker details",
+      data: caretakers,
     });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
 export const GetCaretakerByID = async (req, res) => {
   try {
-    const ID = req.body;
+    const { _id } = req.body;
 
-    if (!ID) {
-      return res.status(400).json({ message: "Enter ID" });
+    if (!_id) {
+      return res.status(400).json({ message: "Caretaker ID is required." });
     }
 
-    const caretaker = await Caretaker.findOne({ _id: ID }).populate("UserID");
+    const caretaker = await Caretaker.findById(_id).populate("UserID");
 
     if (!caretaker) {
-      res.send("NO caretaker IS THERE");
+      return res.status(404).json({ message: "Caretaker not found." });
     }
 
-    return res
-      .status(201)
-      .json({ message: "get user successfully", data: caretaker });
+    return res.status(200).json({
+      message: "Caretaker details fetched successfully",
+      data: caretaker,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ---------------- UPDATE ----------------
 export const UpdateCaretaker = async (req, res) => {
   try {
-    const { _id, Name, Email, Password, MobileNumber, Status, HostelBlock } =
-      req.body;
+    const { _id, Name, Status, HostelBlock } = req.body;
 
-    if (Password != "CARETAKER") {
-      return res.status(400).json({ message: "ENTER CORRECT PASSWORD.." });
-    }
-
-    if (!Name || !Email || !MobileNumber || !Status || !HostelBlock) {
+    if (!_id || !Name || !Status || !HostelBlock) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    const data = await Caretaker.findOneAndUpdate(
-      { _id },
-      { Name, Email, Password, MobileNumber, Status, HostelBlock },
+    const updatedCaretaker = await Caretaker.findByIdAndUpdate(
+      _id,
+      { Name, Status, HostelBlock },
       { new: true }
     ).populate("UserID");
 
-    if (!data) {
-      res.send("NO caretakerDATA IS THERE");
+    if (!updatedCaretaker) {
+      return res.status(404).json({ message: "Caretaker not found." });
     }
 
-    return res.status(201).json({ message: "update Successfully", data: data });
+    return res.status(200).json({
+      message: "Caretaker updated successfully",
+      data: updatedCaretaker,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ---------------- DELETE ----------------
 export const DeleteCaretaker = async (req, res) => {
   try {
-    const id = req.body;
+    const { _id } = req.body;
 
-    if (!id) {
-      return res.status(400).json({ message: "Enter ID" });
+    if (!_id) {
+      return res.status(400).json({ message: "Caretaker ID is required." });
     }
 
-    const caretaker = await Caretaker.findOneAndDelete({ _id: id }).populate(
+    const deletedCaretaker = await Caretaker.findByIdAndDelete(_id).populate(
       "UserID"
     );
 
-    if (!caretaker) {
-      res.send("NO caretakerDATA IS THERE");
+    if (!deletedCaretaker) {
+      return res.status(404).json({ message: "Caretaker not found." });
     }
 
-    return res
-      .status(201)
-      .json({ message: " user Deleted successfully", data: caretaker });
+    return res.status(200).json({
+      message: "Caretaker deleted successfully",
+      data: deletedCaretaker,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };

@@ -1,101 +1,105 @@
 import Room from "../MODELS/RoomModel.js";
 
+// ================== CREATE ROOM ==================
 export const AddRooms = async (req, res) => {
   try {
     const { RoomNumber, HostelBlock, Capacity, Occupancy } = req.body;
 
     if (!RoomNumber || !HostelBlock || !Capacity || !Occupancy) {
-      return res.status(401).json({ message: "enter all fields !" });
+      return res.status(400).json({ message: "All fields are required." });
     }
-    const existingRoom = await Room.findOne(RoomNumber);
-    if (existingRoom.Occupancy - 1 >= existingRoom.Capacity) {
-      return res.status(400).json({ message: "room full " });
+
+    // Check if room already exists
+    const existingRoom = await Room.findOne({ RoomNumber });
+    if (existingRoom) {
+      return res.status(409).json({ message: "Room already exists." });
     }
-    const roomdetails = await new Room({
+
+    // Create new room
+    const newRoom = new Room({
       RoomNumber,
       HostelBlock,
       Capacity,
       Occupancy,
     });
 
-    roomdetails.save();
+    await newRoom.save();
 
-    return res
-      .status(201)
-      .json({ message: "ROOM CREATED SUCCESSFULLY !", DATA: roomdetails });
+    return res.status(201).json({
+      message: "Room created successfully.",
+      data: newRoom,
+    });
   } catch (err) {
-    return res.send({
-      message: "error on room creations !",
+    return res.status(500).json({
+      message: "Error creating room.",
       error: err.message,
     });
   }
 };
 
+// ================== GET ROOMS ==================
 export const GetRoomdetails = async (req, res) => {
   try {
-    const roomdata = await Room.find();
-    if (!roomdata) {
-      return res.status(201).json({ message: "ROOM data is empty!" });
+    const rooms = await Room.find();
+    if (!rooms || rooms.length === 0) {
+      return res.status(404).json({ message: "No room data found." });
     }
-    return res.status(201).json({ message: "ROOM  DETAILS !", DATA: roomdata });
+    return res.status(200).json({ message: "Room details fetched.", data: rooms });
   } catch (err) {
-    return res
-      .status(201)
-      .json({ message: "Room fetch error !", error: err.message });
+    return res.status(500).json({
+      message: "Error fetching rooms.",
+      error: err.message,
+    });
   }
 };
 
-//  Update room
-
+// ================== UPDATE ROOM ==================
 export const UpdateRoom = async (req, res) => {
   try {
     const { _id, RoomNumber, HostelBlock, Capacity, Occupancy } = req.body;
 
-    if (!RoomName || !HostelBlock || !_id || !Capacity || !Occupancy) {
-      return res.status(401).json({ message: "enter all fields !" });
+    if (!_id || !RoomNumber || !HostelBlock || !Capacity || !Occupancy) {
+      return res.status(400).json({ message: "All fields are required." });
     }
 
     const updatedRoom = await Room.findByIdAndUpdate(
-      { _id },
+      _id,
       { RoomNumber, HostelBlock, Capacity, Occupancy },
-      {
-        new: true,
-      }
+      { new: true }
     );
 
     if (!updatedRoom) {
-      return res.status(404).json({ message: "Room not found" });
+      return res.status(404).json({ message: "Room not found." });
     }
 
     res.status(200).json({
-      message: "Room updated successfully",
+      message: "Room updated successfully.",
       data: updatedRoom,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error updating room", error: error.message });
+    res.status(500).json({ message: "Error updating room.", error: error.message });
   }
 };
 
+// ================== DELETE ROOM ==================
 export const DeleteRoom = async (req, res) => {
   try {
     const { _id } = req.body;
     if (!_id) {
-      return res.status(401).json({ message: "ENTER ID !" });
+      return res.status(400).json({ message: "Room ID is required." });
     }
 
-    const roomdata = await Room.findOneAndDelete({ _id });
+    const deletedRoom = await Room.findByIdAndDelete(_id);
 
-    if (!roomdata) {
-      return res.status(201).json({ message: "ROOM data is already empty!" });
+    if (!deletedRoom) {
+      return res.status(404).json({ message: "Room not found." });
     }
-    return res
-      .status(201)
-      .json({ message: "ROOM deleted successfully !", DATA: roomdata });
+
+    return res.status(200).json({
+      message: "Room deleted successfully.",
+      data: deletedRoom,
+    });
   } catch (err) {
-    return res
-      .status(201)
-      .json({ message: "Room delete error !", error: err.message });
+    return res.status(500).json({ message: "Error deleting room.", error: err.message });
   }
 };

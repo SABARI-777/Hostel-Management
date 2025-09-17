@@ -9,9 +9,9 @@ import {
 
 const BatchRouter = express.Router();
 
-BatchRouter.post("/batch/add", AddPlacement);
-BatchRouter.get("/batch/details", GetBatch);
-BatchRouter.patch("/batch/update", UpdateBatch);
-BatchRouter.delete("/batch/delete", DeleteBatch);
+BatchRouter.post("/b/add", AddPlacement);
+BatchRouter.get("/b/details", GetBatch);
+BatchRouter.patch("/b/update", UpdateBatch);
+BatchRouter.delete("/b/delete", DeleteBatch);
 
 export default BatchRouter;

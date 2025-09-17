@@ -1,93 +1,98 @@
 import Placement from "../MODELS/PlacementModel.js";
 
+// ---------------- CREATE ----------------
 export const AddPlacement = async (req, res) => {
   try {
     const { BatchName, Days, ClassTiming, Status } = req.body;
 
-    console.log(req.body);
     if (!BatchName || !Days || !ClassTiming || !Status) {
-      return res.status(400).json({ message: "enter all fields !" });
+      return res.status(400).json({ message: "All fields are required." });
     }
 
-    const Batch = await new Placement({
+    const newBatch = new Placement({
       BatchName,
       Days,
       ClassTiming,
       Status,
     });
 
-    await Batch.save();
+    await newBatch.save();
 
-    res.status(201).json({ message: "User Created Successfully", data: Batch });
+    return res.status(201).json({
+      message: "Batch created successfully",
+      data: newBatch,
+    });
   } catch (err) {
-    return res.status(400).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ---------------- READ ----------------
 export const GetBatch = async (req, res) => {
   try {
     const batchDetails = await Placement.find();
 
-    if (!batchDetails) {
-      return res.status.json({ message: "no batch detail " });
+    if (!batchDetails || batchDetails.length === 0) {
+      return res.status(404).json({ message: "No batch details found." });
     }
 
-    res.status(201).json({ message: "batch details", data: batchDetails });
+    return res.status(200).json({
+      message: "Batch details fetched successfully",
+      data: batchDetails,
+    });
   } catch (err) {
-    return res.status(400).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ---------------- UPDATE ----------------
 export const UpdateBatch = async (req, res) => {
   try {
     const { id, BatchName, Days, ClassTiming, Status } = req.body;
 
-    if (!BatchName || !id || !Days || !ClassTiming || !Status) {
-      return res.status(400).json({ message: "enter id !" });
-    }
-    const batchDetails = await Placement.findOne({ _id: id });
-
-    if (!batchDetails) {
-      return res.status.json({ message: "no batch detail " });
+    if (!id || !BatchName || !Days || !ClassTiming || !Status) {
+      return res.status(400).json({ message: "All fields including id are required." });
     }
 
-    const batch = await Placement.findOneAndUpdate(
-      { _id: id },
-      {
-        BatchName,
-        Days,
-        ClassTiming,
-        Status,
-      },
+    const updatedBatch = await Placement.findByIdAndUpdate(
+      id,
+      { BatchName, Days, ClassTiming, Status },
       { new: true }
     );
 
-    res
-      .status(201)
-      .json({ message: "batch updated successfully", data: batch });
+    if (!updatedBatch) {
+      return res.status(404).json({ message: "Batch not found." });
+    }
+
+    return res.status(200).json({
+      message: "Batch updated successfully",
+      data: updatedBatch,
+    });
   } catch (err) {
-    return res.status(400).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ---------------- DELETE ----------------
 export const DeleteBatch = async (req, res) => {
   try {
     const { id } = req.body;
+
     if (!id) {
-      return res.status(400).json({ message: "enter id !" });
-    }
-    const batchDetails = await Placement.findOne({ _id: id });
-
-    if (!batchDetails) {
-      return res.status.json({ message: "no batch detail " });
+      return res.status(400).json({ message: "Batch id is required." });
     }
 
-    const batch = await Placement.findOneAndDelete({ _id: id });
+    const deletedBatch = await Placement.findByIdAndDelete(id);
 
-    res
-      .status(201)
-      .json({ message: "batch deleted successfully", data: batch });
+    if (!deletedBatch) {
+      return res.status(404).json({ message: "Batch not found." });
+    }
+
+    return res.status(200).json({
+      message: "Batch deleted successfully",
+      data: deletedBatch,
+    });
   } catch (err) {
-    return res.status(400).json({ error: true, message: err.message });
+    return res.status(500).json({ error: true, message: err.message });
   }
 };

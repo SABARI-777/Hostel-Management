@@ -1,4 +1,3 @@
-import mongoose from "mongoose";
 import Student from "../MODELS/Studentmodel.js";
 import User from "../MODELS/UserModel.js";
 import Advisor from "../MODELS/AdvisorModel.js";
@@ -6,6 +5,7 @@ import Room from "../MODELS/RoomModel.js";
 import DepartmentModel from "../MODELS/DepartmentModel.js";
 import PlacementModel from "../MODELS/PlacementModel.js";
 
+// ================== CREATE STUDENT ==================
 export const CreateNewStudent = async (req, res) => {
   try {
     const {
@@ -24,85 +24,54 @@ export const CreateNewStudent = async (req, res) => {
       AdvisorName,
     } = req.body;
 
-    if (!Name) {
-      return res.status(400).json({ message: "Enter name.." });
-    }
+    // Validate required fields
+    if (!Name) return res.status(400).json({ message: "Name is required." });
+    if (!Email) return res.status(400).json({ message: "Email is required." });
+    if (!RollNumber) return res.status(400).json({ message: "Roll Number is required." });
+    if (!RegisterNumber) return res.status(400).json({ message: "Register Number is required." });
+    if (!ParentMobileNumber) return res.status(400).json({ message: "Parent Mobile Number is required." });
+    if (!Gender) return res.status(400).json({ message: "Gender is required." });
+    if (!StartYear) return res.status(400).json({ message: "Start Year is required." });
+    if (!Section) return res.status(400).json({ message: "Section is required." });
+    if (!Status) return res.status(400).json({ message: "Status is required." });
 
-    if (!Email) {
-      return res.status(400).json({ message: "Enter email ....." });
-    }
-
-    if (!RollNumber) {
-      return res.status(400).json({ message: "Enter rollnumber" });
-    }
-
-    if (!RegisterNumber) {
-      return res.status(400).json({ message: "Enter register_number" });
-    }
-
-    if (!ParentMobileNumber) {
-      return res.status(400).json({ message: "Enter parent  number" });
-    }
-
-    if (!Gender) {
-      return res.status(400).json({ message: "Enter gender  mobile" });
-    }
-
-    if (!StartYear) {
-      return res.status(400).json({ message: "Enter start year  mobile" });
-    }
-
-    if (!Section) {
-      return res.status(400).json({ message: "Enter Section !" });
-    }
-
-    if (!Status) {
-      return res.status(400).json({ message: "Enter Status !" });
-    }
-
+    // Check if linked user exists
     const existingUser = await User.findOne({ Email });
-
     if (!existingUser) {
-      return res
-        .status(400)
-        .json({ message: "User Not found this email and password !" });
+      return res.status(400).json({ message: "No user found with this email." });
     }
 
-    const Studentexist = await Student.findOne({
-      UserId: existingUser._id,
-    });
+    // Check if student already exists
+    const studentExist = await Student.findOne({ UserId: existingUser._id });
+    if (studentExist) {
+      return res.status(409).json({ message: "Student already registered." });
+    }
 
-    // if (Studentexist) {
-    //   return res.status(200).json({ message: "student already register !" });
-    // }
-
+    // Find department
     const department = await DepartmentModel.findOne({ DepartmentName });
-
     if (!department) {
-      return res.status(400).json({ message: "department Not found !" });
+      return res.status(400).json({ message: "Department not found." });
     }
 
+    // Find batch
     const batch = await PlacementModel.findOne({ BatchName });
-
     if (!batch) {
-      return res.status(400).json({ message: "batch Not found !" });
+      return res.status(400).json({ message: "Batch not found." });
     }
 
+    // Find advisor
     const advisor = await Advisor.findOne({ Name: AdvisorName });
-
-    console.log(advisor);
-
     if (!advisor) {
-      return res.status(400).json({ message: "advisor Not found !" });
+      return res.status(400).json({ message: "Advisor not found." });
     }
-    
+
+    // Find room
     const room = await Room.findOne({ RoomNumber });
-
-    if(!room){
-      return res.status(201).json({message:"no room details !"});
+    if (!room) {
+      return res.status(400).json({ message: "Room not found." });
     }
 
-    const NewStudent = await new Student({
+    const newStudent = new Student({
       Name,
       Gender,
       StartYear,
@@ -118,36 +87,20 @@ export const CreateNewStudent = async (req, res) => {
       AdvisorId: advisor._id,
     });
 
-    await NewStudent.save();
+    await newStudent.save();
 
-    res
-      .status(201)
-      .json({ message: "Student Created Successfully", data: NewStudent });
+    res.status(201).json({
+      message: "Student created successfully.",
+      data: newStudent,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ================== GET ALL STUDENTS ==================
 export const GetStudent = async (req, res) => {
   try {
-    // const { Username, password } = req.body;
-
-    // if (!Username) {
-    //   return res.status(400).json({ message: "Enter Username ....." });
-    // }
-
-    // if (!password) {
-    //   return res.status(400).json({ message: "Enter password.." });
-    // }
-
-    // const caretaker = await Caretaker.findOne({ Username, password });
-
-    // if (!caretaker) {
-    //   return res
-    //     .status(401)
-    //     .json({ message: "authention failed on caretaker !" });
-    // }
-
     const students = await Student.find()
       .populate("UserId")
       .populate("RoomId")
@@ -155,18 +108,20 @@ export const GetStudent = async (req, res) => {
       .populate("AdvisorId")
       .populate("PlacementId");
 
-    if (!students) {
-      return res.send("NO stundent details IS THERE");
+    if (!students || students.length === 0) {
+      return res.status(404).json({ message: "No student details found." });
     }
 
-    return res
-      .status(201)
-      .json({ message: "all student details", data: students });
+    return res.status(200).json({
+      message: "All student details fetched successfully.",
+      data: students,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ================== UPDATE STUDENT ==================
 export const UpdateStudent = async (req, res) => {
   try {
     const {
@@ -181,9 +136,7 @@ export const UpdateStudent = async (req, res) => {
       ParentMobileNumber,
     } = req.body;
 
-    if (!_id) {
-      return res.status(400).json({ message: "Student ID is required." });
-    }
+    if (!_id) return res.status(400).json({ message: "Student ID is required." });
 
     if (
       !Name ||
@@ -193,13 +146,13 @@ export const UpdateStudent = async (req, res) => {
       !RollNumber ||
       !RegisterNumber ||
       !Status ||
-      !ParentMobileNumber 
+      !ParentMobileNumber
     ) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    const data = await Student.findOneAndUpdate(
-      { _id },
+    const updatedStudent = await Student.findByIdAndUpdate(
+      _id,
       {
         Name,
         Gender,
@@ -218,34 +171,37 @@ export const UpdateStudent = async (req, res) => {
       .populate("AdvisorId")
       .populate("PlacementId");
 
-    if (!data) {
-      return res.send("NO student DATA IS THERE");
+    if (!updatedStudent) {
+      return res.status(404).json({ message: "Student not found." });
     }
 
-    return res.status(201).json({ message: "Update Successfully", data: data });
+    return res.status(200).json({
+      message: "Student updated successfully.",
+      data: updatedStudent,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    res.status(500).json({ error: true, message: err.message });
   }
 };
 
+// ================== DELETE STUDENT ==================
 export const DeleteStudent = async (req, res) => {
   try {
-    const _id = req.body;
+    const { _id } = req.body;
 
-    if (!_id) {
-      return res.status(400).json({ message: "Enter ID" });
+    if (!_id) return res.status(400).json({ message: "Student ID is required." });
+
+    const deletedStudent = await Student.findByIdAndDelete(_id);
+
+    if (!deletedStudent) {
+      return res.status(404).json({ message: "Student not found." });
     }
 
-    const student = await Student.findOneAndDelete({ _id });
-
-    if (!student) {
-      res.send("NO student IS THERE");
-    }
-
-    return res
-      .status(201)
-      .json({ message: " student Deleted successfully", data: student });
+    return res.status(200).json({
+      message: "Student deleted successfully.",
+      data: deletedStudent,
+    });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    res.status(500).json({ error: true, message: err.message });
   }
 };

@@ -11,13 +11,13 @@ import {
 const CaretakerRouter = express.Router();
 
 // caretaker routes
-CaretakerRouter.get("/detail/", GetCaretakerByID);
+// CaretakerRouter.get("/detail/", GetCaretakerByID);
 
 //admin routes
 
-CaretakerRouter.post("/add/", CreateNewCaretaker);
-CaretakerRouter.get("/details/", GetCaretakers);
-CaretakerRouter.patch("/update/", UpdateCaretaker);
-CaretakerRouter.delete("/delete/", DeleteCaretaker);
+CaretakerRouter.post("/ct/add/", CreateNewCaretaker);
+CaretakerRouter.get("/ct/details/", GetCaretakers);
+CaretakerRouter.patch("/ct/update/", UpdateCaretaker);
+CaretakerRouter.delete("/ct/delete/", DeleteCaretaker);
 
 export default CaretakerRouter;

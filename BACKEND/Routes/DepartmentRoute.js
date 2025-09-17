@@ -9,9 +9,9 @@ import {
 
 const DepartmentRouter = express.Router();
 
-DepartmentRouter.post("/department/add", AddDepartment);
-DepartmentRouter.get("/department/details", GetDepartments);
-DepartmentRouter.patch("/department/update", UpdateDepartment);
-DepartmentRouter.delete("/department/delete", DeleteDepartment);
+DepartmentRouter.post("/d/add", AddDepartment);
+DepartmentRouter.get("/d/details", GetDepartments);
+DepartmentRouter.patch("/d/update", UpdateDepartment);
+DepartmentRouter.delete("/d/delete", DeleteDepartment);
 
 export default DepartmentRouter;
