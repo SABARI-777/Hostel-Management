@@ -1,5 +1,5 @@
-import User from "../Models/UserModel.js";
-import OTP from "../Models/OTPModel.js";
+import User from "../MODELS/UserModel.js";
+import OTP from "../MODELS/OTPModel.js";
 import { sendOTP } from "../utils/sendEmail.js";
 
 

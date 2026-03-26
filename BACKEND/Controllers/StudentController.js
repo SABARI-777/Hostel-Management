@@ -1,10 +1,10 @@
-import Student from "../Models/Studentmodel.js";
-import User from "../Models/UserModel.js";
-import Advisor from "../Models/AdvisorModel.js";
-import Room from "../Models/RoomModel.js";
-import DepartmentModel from "../Models/DepartmentModel.js";
-import PlacementModel from "../Models/PlacementModel.js";
-import Caretaker from "../Models/Caretakermodel.js";
+import Student from "../MODELS/Studentmodel.js";
+import User from "../MODELS/UserModel.js";
+import Advisor from "../MODELS/AdvisorModel.js";
+import Room from "../MODELS/RoomModel.js";
+import DepartmentModel from "../MODELS/DepartmentModel.js";
+import PlacementModel from "../MODELS/PlacementModel.js";
+import Caretaker from "../MODELS/Caretakermodel.js";
 import sendTestEmail from '../connecter/send.js'
 // ================== CREATE STUDENT ==================
 export const CreateNewStudent = async (req, res) => {

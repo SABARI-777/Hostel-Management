@@ -1,9 +1,9 @@
 // -------------------- EmergencyPass Controller --------------------
-import EmergencyPass from "../Models/EmergencyPassModel.js";
-import Student from "../Models/Studentmodel.js";
-import Caretaker from "../Models/Caretakermodel.js";
-import Counter from "../Models/CounterModel.js";
-import Room from "../Models/RoomModel.js";
+import EmergencyPass from "../MODELS/EmergencyPassModel.js";
+import Student from "../MODELS/Studentmodel.js";
+import Caretaker from "../MODELS/Caretakermodel.js";
+import Counter from "../MODELS/CounterModel.js";
+import Room from "../MODELS/RoomModel.js";
 
 export const createEmergencyPass = async (req, res) => {
   try {

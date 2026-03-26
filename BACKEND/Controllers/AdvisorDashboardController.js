@@ -1,5 +1,5 @@
-import Advisor from "../Models/AdvisorModel.js";
-import Student from "../Models/Studentmodel.js";
+import Advisor from "../MODELS/AdvisorModel.js";
+import Student from "../MODELS/Studentmodel.js";
 
 /**
  * Controller to fetch all students assigned to the logged-in Advisor.

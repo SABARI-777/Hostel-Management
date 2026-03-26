@@ -1,8 +1,8 @@
-import OutPass from "../Models/OutpassModel.js";
-import GeneralPass from "../Models/GeneralPassModel.js";
-import EmergencyPass from "../Models/EmergencyPassModel.js";
-import Student from "../Models/Studentmodel.js";
-import User from "../Models/UserModel.js";
+import OutPass from "../MODELS/OutpassModel.js";
+import GeneralPass from "../MODELS/GeneralPassModel.js";
+import EmergencyPass from "../MODELS/EmergencyPassModel.js";
+import Student from "../MODELS/Studentmodel.js";
+import User from "../MODELS/UserModel.js";
 import { sendLateEntryEmail } from "../utils/sendEmail.js";
 
 export const ProcessPassReturn = async (req, res) => {
