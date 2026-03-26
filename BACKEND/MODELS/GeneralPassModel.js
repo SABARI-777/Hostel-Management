@@ -10,7 +10,24 @@ const GeneralPassSchema = new mongoose.Schema(
     InDateTime: {
       type: Date,
       required: false,
-      default: Date.now,
+      default: null,
+    },
+    ExpectedInDateTime: {
+      type: Date,
+      required: false,
+    },
+    ActualInDateTime: {
+      type: Date,
+      required: false,
+    },
+    LateEntry: {
+      type: Boolean,
+      default: false,
+    },
+    PassId: {
+      type: String,
+      required: true,
+      unique: true,
     },
     Place: {
       type: String,
@@ -55,6 +72,6 @@ const GeneralPassSchema = new mongoose.Schema(
   }
 );
 
-const GeneralPass = mongoose.model("GeneralPass", GeneralPassSchema);
+const GeneralPass = mongoose.models.GeneralPass || mongoose.model("GeneralPass", GeneralPassSchema, "GeneralPass");
 
 export default GeneralPass;

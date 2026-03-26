@@ -4,7 +4,6 @@ const PlacementSchema = new mongoose.Schema({
   BatchName: {
     type: String,
     require: true,
-    enum: ["AZ","BC","SDE0","SDE1","AIML","SDE2","MERN","DB"],
   },
   Days: {
     type: [String],
@@ -28,7 +27,6 @@ const PlacementSchema = new mongoose.Schema({
   },
 });
 
-const Placement = new mongoose.model("Placement", PlacementSchema, "Placement");
+const Placement = mongoose.models.Placement || mongoose.model("Placement", PlacementSchema, "Placement");
 
 export default Placement;
-

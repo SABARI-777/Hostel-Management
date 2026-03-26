@@ -6,7 +6,6 @@ const AdvisorSchema = new mongoose.Schema({
   },
   Designation: {
     type: String,
-    enum: ["Assistant Professor", "Associate Professor", "Professor", "HOD"],
     default: "Assistant Professor",
   },
   UserId: {
@@ -19,6 +18,6 @@ const AdvisorSchema = new mongoose.Schema({
   },
 });
 
-const Advisor = new mongoose.model("Advisor", AdvisorSchema, "Advisor");
+const Advisor = mongoose.models.Advisor || mongoose.model("Advisor", AdvisorSchema, "Advisor");
 
 export default Advisor;

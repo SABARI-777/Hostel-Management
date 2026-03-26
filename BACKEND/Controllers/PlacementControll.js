@@ -1,4 +1,5 @@
-import Placement from "../MODELS/PlacementModel.js";
+import Placement from "../Models/PlacementModel.js";
+import Student from "../Models/Studentmodel.js";
 
 // ---------------- CREATE ----------------
 export const AddPlacement = async (req, res) => {

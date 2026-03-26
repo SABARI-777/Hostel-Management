@@ -32,10 +32,6 @@ const AttendanceSchema = new mongoose.Schema(
   }
 );
 
-const AttendanceDetails = mongoose.model(
-  "AttendanceDetails",
-  AttendanceSchema,
-  "AttendanceDetails"
-);
+const AttendanceDetails = mongoose.models.AttendanceDetails || mongoose.model("AttendanceDetails", AttendanceSchema, "AttendanceDetails");
 
 export default AttendanceDetails;

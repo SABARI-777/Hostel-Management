@@ -1,6 +1,7 @@
-import Advisor from "../MODELS/AdvisorModel.js";
-import User from "../MODELS/UserModel.js";
-import DepartmentModel from "../MODELS/DepartmentModel.js";
+import Advisor from "../Models/AdvisorModel.js";
+import User from "../Models/UserModel.js";
+import Department from "../Models/DepartmentModel.js";
+import Student from "../Models/Studentmodel.js";
 
 // ---------------- CREATE ----------------
 export const AddAdvisor = async (req, res) => {
@@ -21,7 +22,7 @@ export const AddAdvisor = async (req, res) => {
     }
 
     // Validate department
-    const department = await DepartmentModel.findOne({ DepartmentName });
+    const department = await Department.findOne({ DepartmentName });
     if (!department) {
       return res.status(404).json({ message: "Department not found." });
     }
@@ -85,7 +86,7 @@ export const UpdateAdvisor = async (req, res) => {
     }
 
     // Find department
-    const department = await DepartmentModel.findOne({ DepartmentName });
+    const department = await Department.findOne({ DepartmentName });
     if (!department) {
       return res.status(404).json({ message: "Department not found." });
     }
@@ -118,6 +119,14 @@ export const DeleteAdvisor = async (req, res) => {
     const { _id } = req.body;
     if (!_id) {
       return res.status(400).json({ message: "Advisor ID is required." });
+    }
+
+    // Check if any students are linked to this advisor
+    const linkedStudents = await Student.findOne({ AdvisorId: _id });
+    if (linkedStudents) {
+      return res.status(400).json({ 
+        message: "Cannot delete Advisor. This advisor is currently assigned to one or more students. Please reassign the students before deletion." 
+      });
     }
 
     const deletedAdvisor = await Advisor.findByIdAndDelete(_id);

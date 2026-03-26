@@ -1,6 +1,8 @@
-import GeneralPass from "../MODELS/GeneralPassModel.js";
-import Student from "../MODELS/Studentmodel.js";
-import Caretaker from "../MODELS/Caretakermodel.js";
+import GeneralPass from "../Models/GeneralPassModel.js";
+import Student from "../Models/Studentmodel.js";
+import Caretaker from "../Models/Caretakermodel.js";
+import Counter from "../Models/CounterModel.js";
+import Room from "../Models/RoomModel.js";
 
 export const createNewHomePass = async (req, res) => {
   try {
@@ -12,8 +14,10 @@ export const createNewHomePass = async (req, res) => {
       Status,
       approved,
       OutDateTime,
+      InDateTime,
       EntryType,
       CaretakerName,
+      ExpectedInDateTime,
     } = req.body;
 
     if (
@@ -36,16 +40,30 @@ export const createNewHomePass = async (req, res) => {
     }
 
     const caretaker = await Caretaker.findOne({ Name: CaretakerName });
-
     if (!caretaker) {
-      return res.status(404).json({ message: "Student not found!" });
+      return res.status(404).json({ message: "Caretaker not found!" });
     }
 
-    const InDateTime = new Date();
+    // 🛡️ Block Isolation Check
+    const studentRoom = await Room.findById(existingStudent.RoomId);
+    if (studentRoom && studentRoom.HostelBlock !== caretaker.HostelBlock) {
+      return res.status(403).json({ 
+        message: `Block mismatch! You are in Block ${studentRoom.HostelBlock}, but selected a caretaker from Block ${caretaker.HostelBlock}.` 
+      });
+    }
+
+    // 🔢 Get Unique PassId
+    const counter = await Counter.findOneAndUpdate(
+      { id: "general_pass_id" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
 
     const Genralpassnew = await new GeneralPass({
+      PassId: `N${counter.seq}`,
       OutDateTime,
-      InDateTime,
+      InDateTime: InDateTime || null,
+      ExpectedInDateTime: ExpectedInDateTime || InDateTime || null,
       Place,
       Purpose,
       Status,
@@ -71,7 +89,9 @@ export const createNewHomePass = async (req, res) => {
 
 export const GenralpassDetalis = async (req, res) => {
   try {
-    const details = await GeneralPass.find().populate("StudentId").populate("CaretakerId");
+    const details = await GeneralPass.find()
+      .populate({ path: "StudentId", populate: { path: "DepartmentId" } })
+      .populate("CaretakerId");
 
     if (!details) {
       return res.status(500).json({ message: "NO Genralpass RECORDS YET !" });

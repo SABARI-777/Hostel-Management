@@ -1,4 +1,7 @@
-import User from "../MODELS/UserModel.js";
+import User from "../Models/UserModel.js";
+import OTP from "../Models/OTPModel.js";
+import { sendOTP } from "../utils/sendEmail.js";
+
 
 // ================== CREATE USER ==================
 export const CreateNewUser = async (req, res) => {
@@ -18,12 +21,35 @@ export const CreateNewUser = async (req, res) => {
       return res.status(400).json({ message: "Type is required" });
     }
 
+    // Strict Role-Based Password Security Check
+    const rolePasswords = {
+      "STUDENT": process.env.STUDENT_PASSWORD,
+      "CARETAKER": process.env.CARETAKER_PASSWORD,
+      "ADVISOR": process.env.ADVISOR_PASSWORD,
+      "ADMIN": process.env.ADMIN_PASSWORD,
+    };
+
+    if (Password !== rolePasswords[Type]) {
+      return res.status(401).json({ message: `Access Denied: Invalid password for ${Type} registration.` });
+    }
+
+    const existingUser = await User.findOne({ Email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+
     const newUser = new User({ Email, Password, MobileNumber, Type });
     await newUser.save();
 
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const newOTP = new OTP({ Email, otp });
+    await newOTP.save();
+
+    await sendOTP(Email, otp);
+
     return res
       .status(201)
-      .json({ message: "User created successfully", data: newUser });
+      .json({ message: "User created and OTP sent successfully", data: newUser, Email: newUser.Email });
   } catch (err) {
     return res.status(500).json({ error: true, message: err.message });
   }
@@ -86,11 +112,21 @@ export const UpdateUser = async (req, res) => {
       return res.status(400).json({ message: "Type is required" });
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      _id,
-      { Email, Password, MobileNumber, Type },
-      { new: true }
-    );
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.Email = Email;
+    user.MobileNumber = MobileNumber;
+    user.Type = Type;
+    
+    // Only update password if it's provided and not the placeholder
+    if (Password && Password !== "Not Needed For Update") {
+        user.Password = Password; // Will trigger pre-save hook
+    }
+
+    const updatedUser = await user.save();
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
@@ -122,13 +158,36 @@ export const DeleteUser = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (user.Password !== Password) {
+    if (!await user.comparePassword(Password)) {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
     await User.findByIdAndDelete(_id);
 
     return res.status(200).json({ message: "User deleted successfully" });
+  } catch (err) {
+    return res.status(500).json({ error: true, message: err.message });
+  }
+};
+
+// ================== VERIFY OTP ==================
+export const verifyOTP = async (req, res) => {
+  try {
+    const { Email, otp } = req.body;
+
+    if (!Email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const otpRecord = await OTP.findOne({ Email, otp });
+
+    if (!otpRecord) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    return res.status(200).json({ message: "OTP Verified Successfully" });
   } catch (err) {
     return res.status(500).json({ error: true, message: err.message });
   }

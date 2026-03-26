@@ -44,10 +44,6 @@ const PlacementAttendancePassSchema = new mongoose.Schema(
   }
 );
 
-const PlacementAttendanceDetails = mongoose.model(
-  "PlacementAttendanceDetails",
-  PlacementAttendancePassSchema,
-  "PlacementAttendanceDetails"
-);
+const PlacementAttendanceDetails = mongoose.models.PlacementAttendanceDetails || mongoose.model("PlacementAttendanceDetails", PlacementAttendancePassSchema, "PlacementAttendanceDetails");
 
 export default PlacementAttendanceDetails;

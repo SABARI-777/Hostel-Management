@@ -22,6 +22,6 @@ const CaretakerSchema = new mongoose.Schema({
   },
 });
 
-const Caretaker = new mongoose.model("Caretaker", CaretakerSchema, "Caretaker");
+const Caretaker = mongoose.models.Caretaker || mongoose.model("Caretaker", CaretakerSchema, "Caretaker");
 
 export default Caretaker;

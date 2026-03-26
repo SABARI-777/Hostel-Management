@@ -1,7 +1,9 @@
 // -------------------- EmergencyPass Controller --------------------
-import EmergencyPass from "../MODELS/EmergencyPassModel.js";
-import Student from "../MODELS/Studentmodel.js";
-import Caretaker from "../MODELS/Caretakermodel.js";
+import EmergencyPass from "../Models/EmergencyPassModel.js";
+import Student from "../Models/Studentmodel.js";
+import Caretaker from "../Models/Caretakermodel.js";
+import Counter from "../Models/CounterModel.js";
+import Room from "../Models/RoomModel.js";
 
 export const createEmergencyPass = async (req, res) => {
   try {
@@ -14,8 +16,10 @@ export const createEmergencyPass = async (req, res) => {
       Status,
       approved,
       OutDateTime,
+      InDateTime,
       EntryType,
       CaretakerName,
+      ExpectedInDateTime,
     } = req.body;
 
     if (!Name) return res.status(400).json({ message: "Name is required" });
@@ -41,11 +45,26 @@ export const createEmergencyPass = async (req, res) => {
     if (!caretaker)
       return res.status(404).json({ message: "Caretaker not found" });
 
-    const InDateTime = new Date();
+    // 🛡️ Block Isolation Check
+    const studentRoom = await Room.findById(student.RoomId);
+    if (studentRoom && studentRoom.HostelBlock !== caretaker.HostelBlock) {
+      return res.status(403).json({ 
+        message: `Block mismatch! You are in Block ${studentRoom.HostelBlock}, but selected a caretaker from Block ${caretaker.HostelBlock}.` 
+      });
+    }
+
+    // 🔢 Get Unique PassId
+    const counter = await Counter.findOneAndUpdate(
+      { id: "emergency_pass_id" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
 
     const newEmergencyPass = new EmergencyPass({
+      PassId: `E${counter.seq}`,
       OutDateTime,
-      InDateTime,
+      InDateTime: InDateTime || null,
+      ExpectedInDateTime: ExpectedInDateTime || InDateTime || null,
       Document,
       Year,
       Place,
@@ -63,6 +82,7 @@ export const createEmergencyPass = async (req, res) => {
       data: newEmergencyPass,
     });
   } catch (error) {
+    console.error("EmergencyPass Create Error:", error);
     return res
       .status(500)
       .json({ message: "Error creating EmergencyPass", error: error.message });
@@ -110,6 +130,14 @@ export const updateEmergencyPass = async (req, res) => {
     if (!caretaker)
       return res.status(404).json({ message: "Caretaker not found" });
 
+    // 🛡️ Block Isolation Check
+    const studentRoom = await Room.findById(student.RoomId);
+    if (studentRoom && studentRoom.HostelBlock !== caretaker.HostelBlock) {
+      return res.status(403).json({ 
+        message: `Block mismatch! You are in Block ${studentRoom.HostelBlock}, but selected a caretaker from Block ${caretaker.HostelBlock}.` 
+      });
+    }
+
     const updatedEmergencyPass = await EmergencyPass.findByIdAndUpdate(
       _id,
       {
@@ -138,6 +166,7 @@ export const updateEmergencyPass = async (req, res) => {
       data: updatedEmergencyPass,
     });
   } catch (error) {
+    console.error("EmergencyPass Update Error:", error);
     return res
       .status(500)
       .json({ message: "Error updating EmergencyPass", error: error.message });
@@ -161,6 +190,7 @@ export const deleteEmergencyPass = async (req, res) => {
       data: deletedEmergencyPass,
     });
   } catch (error) {
+    console.error("EmergencyPass Delete Error:", error);
     return res
       .status(500)
       .json({ message: "Error deleting EmergencyPass", error: error.message });
@@ -170,7 +200,7 @@ export const deleteEmergencyPass = async (req, res) => {
 export const getEmergencyPassDetails = async (req, res) => {
   try {
     const details = await EmergencyPass.find()
-      .populate("StudentId")
+      .populate({ path: "StudentId", populate: { path: "DepartmentId" } })
       .populate("CaretakerId");
     if (!details || details.length === 0)
       return res.status(404).json({ message: "No EmergencyPass records yet" });
@@ -178,6 +208,7 @@ export const getEmergencyPassDetails = async (req, res) => {
       .status(200)
       .json({ message: "All EmergencyPass records", data: details });
   } catch (error) {
+    console.error("EmergencyPass Fetch Error:", error);
     return res.status(500).json({
       message: "Error fetching EmergencyPass records",
       error: error.message,

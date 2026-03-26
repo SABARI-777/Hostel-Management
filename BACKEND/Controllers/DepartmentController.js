@@ -1,26 +1,15 @@
-import DepartmentModel from "../MODELS/DepartmentModel.js";
+import DepartmentModel from "../Models/DepartmentModel.js";
+import Student from "../Models/Studentmodel.js";
+import Advisor from "../Models/AdvisorModel.js";
 
 // ================== CREATE DEPARTMENT ==================
 export const AddDepartment = async (req, res) => {
   try {
-    const { DepartmentName } = req.body;
+    const { DepartmentName, HodName } = req.body;
 
-    if (!DepartmentName) {
-      return res.status(400).json({ message: "Department name is required." });
+    if (!DepartmentName || !HodName) {
+      return res.status(400).json({ message: "Department Name and HOD Name are required." });
     }
-
-    // HOD mapping
-    const hodMap = {
-      CSE: "KG",
-      SAH: "PN",
-      IT: "DB",
-      ECE: "BK",
-      EEE: "MK",
-      MECH: "AK",
-      AIDS: "JK",
-    };
-
-    const HodName = hodMap[DepartmentName] || "Not Assigned";
 
     // Prevent duplicate department creation
     const existingDept = await DepartmentModel.findOne({ DepartmentName });
@@ -100,6 +89,17 @@ export const DeleteDepartment = async (req, res) => {
 
     if (!_id) {
       return res.status(400).json({ message: "Department ID is required." });
+    }
+
+    // Protection: Check for linked advisors or students
+    const linkedAdvisor = await Advisor.findOne({ DepartmentId: _id });
+    if (linkedAdvisor) {
+      return res.status(400).json({ message: "Cannot delete Department. One or more Advisors are still linked to this department." });
+    }
+
+    const linkedStudent = await Student.findOne({ DepartmentId: _id });
+    if (linkedStudent) {
+      return res.status(400).json({ message: "Cannot delete Department. One or more Students are still linked to this department." });
     }
 
     const department = await DepartmentModel.findByIdAndDelete(_id);

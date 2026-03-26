@@ -17,20 +17,19 @@ const StudentSchema = new mongoose.Schema({
   },
   Section: {
     type: String,
-    require: true,
-    enum: ["A", "B", "C"],
+    required: true,
   },
   RollNumber: {
     type: String,
-    require: true,
+    required: true,
   },
   RegisterNumber: {
     type: String,
-    require: true,
+    required: true,
   },
   Status: {
     type: String,
-    enum: ["ACTIVE", "GRADUATED", "DROPPED", "SUSPENDED", "PENDING"],
+    enum: ["ACTIVE", "INACTIVE", "GRADUATED", "DROPPED", "SUSPENDED", "PENDING"],
     default: "ACTIVE",
     required: true,
   },
@@ -38,6 +37,10 @@ const StudentSchema = new mongoose.Schema({
   ParentMobileNumber: {
     type: String,
     require: true,
+  },
+  ParentEmail: {
+    type: String,
+    required: true,
   },
   UserId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -65,8 +68,12 @@ const StudentSchema = new mongoose.Schema({
     ref: "Advisor",
     required: true,
   },
+  LateEntryCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
-const Student = new mongoose.model("Student", StudentSchema, "Student");
+const Student = mongoose.models.Student || mongoose.model("Student", StudentSchema, "Student");
 
 export default Student;

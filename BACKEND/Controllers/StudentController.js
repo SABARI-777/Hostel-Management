@@ -1,10 +1,11 @@
-import Student from "../MODELS/Studentmodel.js";
-import User from "../MODELS/UserModel.js";
-import Advisor from "../MODELS/AdvisorModel.js";
-import Room from "../MODELS/RoomModel.js";
-import DepartmentModel from "../MODELS/DepartmentModel.js";
-import PlacementModel from "../MODELS/PlacementModel.js";
-
+import Student from "../Models/Studentmodel.js";
+import User from "../Models/UserModel.js";
+import Advisor from "../Models/AdvisorModel.js";
+import Room from "../Models/RoomModel.js";
+import DepartmentModel from "../Models/DepartmentModel.js";
+import PlacementModel from "../Models/PlacementModel.js";
+import Caretaker from "../Models/Caretakermodel.js";
+import sendTestEmail from '../connecter/send.js'
 // ================== CREATE STUDENT ==================
 export const CreateNewStudent = async (req, res) => {
   try {
@@ -18,11 +19,26 @@ export const CreateNewStudent = async (req, res) => {
       RegisterNumber,
       Status,
       ParentMobileNumber,
+      ParentEmail,
       DepartmentName,
       BatchName,
       RoomNumber,
+      CaretakerName,
       AdvisorName,
+      ExpectedInDateTime, // Not used here but might be in body
+      caretakerId 
     } = req.body;
+
+    // 🛡️ Block Isolation for Caretakers
+    if (caretakerId) {
+      const ct = await Caretaker.findById(caretakerId);
+      const targetRoom = await Room.findOne({ RoomNumber: Number(RoomNumber) });
+      if (ct && targetRoom && targetRoom.HostelBlock !== ct.HostelBlock) {
+        return res.status(403).json({ 
+          message: `Block mismatch! You are assigned to Block ${ct.HostelBlock}, but trying to add a student to Room ${RoomNumber} in Block ${targetRoom.HostelBlock}.` 
+        });
+      }
+    }
 
     // Validate required fields
     if (!Name) return res.status(400).json({ message: "Name is required." });
@@ -30,6 +46,7 @@ export const CreateNewStudent = async (req, res) => {
     if (!RollNumber) return res.status(400).json({ message: "Roll Number is required." });
     if (!RegisterNumber) return res.status(400).json({ message: "Register Number is required." });
     if (!ParentMobileNumber) return res.status(400).json({ message: "Parent Mobile Number is required." });
+    if (!ParentEmail) return res.status(400).json({ message: "Parent Email is required." });
     if (!Gender) return res.status(400).json({ message: "Gender is required." });
     if (!StartYear) return res.status(400).json({ message: "Start Year is required." });
     if (!Section) return res.status(400).json({ message: "Section is required." });
@@ -48,38 +65,43 @@ export const CreateNewStudent = async (req, res) => {
     }
 
     // Find department
-    const department = await DepartmentModel.findOne({ DepartmentName });
+    const department = await DepartmentModel.findOne({ DepartmentName: DepartmentName.trim() });
     if (!department) {
       return res.status(400).json({ message: "Department not found." });
     }
 
     // Find batch
-    const batch = await PlacementModel.findOne({ BatchName });
+    const batch = await PlacementModel.findOne({ BatchName: BatchName.trim() });
     if (!batch) {
       return res.status(400).json({ message: "Batch not found." });
     }
 
     // Find advisor
-    const advisor = await Advisor.findOne({ Name: AdvisorName });
+    const advisor = await Advisor.findOne({ Name: AdvisorName.trim() });
     if (!advisor) {
       return res.status(400).json({ message: "Advisor not found." });
     }
 
     // Find room
-    const room = await Room.findOne({ RoomNumber });
+    const room = await Room.findOne({ RoomNumber: Number(RoomNumber) });
     if (!room) {
       return res.status(400).json({ message: "Room not found." });
+    }
+
+    if (room.Occupancy >= room.Capacity) {
+      return res.status(400).json({ message: "Room is fully filled." });
     }
 
     const newStudent = new Student({
       Name,
       Gender,
       StartYear,
-      Section,
+      Section: Section ? Section.toUpperCase() : "A",
       RollNumber,
       RegisterNumber,
-      Status,
+      Status: Status ? Status.toUpperCase() : "ACTIVE",
       ParentMobileNumber,
+      ParentEmail,
       UserId: existingUser._id,
       DepartmentId: department._id,
       PlacementId: batch._id,
@@ -88,6 +110,9 @@ export const CreateNewStudent = async (req, res) => {
     });
 
     await newStudent.save();
+
+    room.Occupancy += 1;
+    await room.save();
 
     res.status(201).json({
       message: "Student created successfully.",
@@ -121,6 +146,33 @@ export const GetStudent = async (req, res) => {
   }
 };
 
+// ================== GET STUDENT BY USER ID (FOR PROFILE) ==================
+export const GetStudentByUserID = async (req, res) => {
+  try {
+    const userId = req.user?.id; // From authenticateToken middleware
+    if (!userId) return res.status(401).json({ message: "Unauthorized access." });
+
+    const student = await Student.findOne({ UserId: userId })
+      .populate("UserId")
+      .populate("RoomId")
+      .populate("DepartmentId")
+      .populate("AdvisorId")
+      .populate("PlacementId");
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student profile not found for this user." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student profile fetched successfully.",
+      data: student,
+    });
+  } catch (err) {
+    res.status(500).json({ error: true, message: err.message });
+  }
+};
+
 // ================== UPDATE STUDENT ==================
 export const UpdateStudent = async (req, res) => {
   try {
@@ -134,9 +186,23 @@ export const UpdateStudent = async (req, res) => {
       RegisterNumber,
       Status,
       ParentMobileNumber,
+      ParentEmail,
+      AdvisorName,
+      caretakerId
     } = req.body;
 
     if (!_id) return res.status(400).json({ message: "Student ID is required." });
+
+    // 🛡️ Block Isolation for Caretakers
+    if (caretakerId) {
+      const ct = await Caretaker.findById(caretakerId);
+      const student = await Student.findById(_id).populate("RoomId");
+      if (ct && student && student.RoomId && student.RoomId.HostelBlock !== ct.HostelBlock) {
+        return res.status(403).json({ 
+          message: `Block mismatch! You cannot manage students from Block ${student.RoomId.HostelBlock}.` 
+        });
+      }
+    }
 
     if (
       !Name ||
@@ -146,23 +212,41 @@ export const UpdateStudent = async (req, res) => {
       !RollNumber ||
       !RegisterNumber ||
       !Status ||
-      !ParentMobileNumber
+      !ParentMobileNumber ||
+      !ParentEmail
     ) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Find and validate advisor if provided
+    let advisorId = undefined;
+    if (AdvisorName) {
+      const advisor = await Advisor.findOne({ Name: AdvisorName.trim() });
+      if (!advisor) {
+        return res.status(400).json({ message: `Advisor '${AdvisorName}' not found.` });
+      }
+      advisorId = advisor._id;
+    }
+
+    const updatePayload = {
+      Name,
+      Gender,
+      StartYear,
+      Section: Section ? Section.toUpperCase() : "A",
+      RollNumber,
+      RegisterNumber,
+      Status: Status ? Status.toUpperCase() : "ACTIVE",
+      ParentMobileNumber,
+      ParentEmail,
+    };
+
+    if (advisorId) {
+      updatePayload.AdvisorId = advisorId;
+    }
+
     const updatedStudent = await Student.findByIdAndUpdate(
       _id,
-      {
-        Name,
-        Gender,
-        StartYear,
-        Section,
-        RollNumber,
-        RegisterNumber,
-        Status,
-        ParentMobileNumber,
-      },
+      updatePayload,
       { new: true }
     )
       .populate("UserId")
@@ -187,14 +271,31 @@ export const UpdateStudent = async (req, res) => {
 // ================== DELETE STUDENT ==================
 export const DeleteStudent = async (req, res) => {
   try {
-    const { _id } = req.body;
+    const { _id, caretakerId } = req.body;
 
     if (!_id) return res.status(400).json({ message: "Student ID is required." });
+
+    // 🛡️ Block Isolation for Caretakers
+    if (caretakerId) {
+      const ct = await Caretaker.findById(caretakerId);
+      const student = await Student.findById(_id).populate("RoomId");
+      if (ct && student && student.RoomId && student.RoomId.HostelBlock !== ct.HostelBlock) {
+        return res.status(403).json({ 
+          message: `Block mismatch! You cannot delete students from Block ${student.RoomId.HostelBlock}.` 
+        });
+      }
+    }
 
     const deletedStudent = await Student.findByIdAndDelete(_id);
 
     if (!deletedStudent) {
       return res.status(404).json({ message: "Student not found." });
+    }
+
+    const room = await Room.findById(deletedStudent.RoomId);
+    if (room && room.Occupancy > 0) {
+      room.Occupancy -= 1;
+      await room.save();
     }
 
     return res.status(200).json({

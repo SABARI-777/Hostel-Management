@@ -10,23 +10,40 @@ const EmergencyPassSchema = new mongoose.Schema(
     InDateTime: {
       type: Date,
       required: false,
-      default: Date.now,
+      default: null,
+    },
+    ExpectedInDateTime: {
+      type: Date,
+      required: false,
+    },
+    ActualInDateTime: {
+      type: Date,
+      required: false,
+    },
+    LateEntry: {
+      type: Boolean,
+      default: false,
+    },
+    PassId: {
+      type: String,
+      required: true,
+      unique: true,
     },
     Document: {
       type: String,
-      require: true,
+      required: true,
     },
     Year:{
-      type:Number,
-      require:true,
+      type: String,
+      required: true,
     },
     Place: {
       type: String,
-      require: true,
+      required: true,
     },
     Purpose: {
       type: String,
-      require: true,
+      required: true,
     },
     Status: {
       type: String,
@@ -39,7 +56,7 @@ const EmergencyPassSchema = new mongoose.Schema(
     },
     EntryType: {
       type: String,
-      require: true,
+      required: true,
       enum: ["MANUAL", "BIOMATRIC"],
     },
     StudentId: {
@@ -54,7 +71,7 @@ const EmergencyPassSchema = new mongoose.Schema(
     },
     Type: {
       type: String,
-      default: "Genralpass",
+      default: "EmergencyPass",
     },
   },
   {
@@ -62,10 +79,6 @@ const EmergencyPassSchema = new mongoose.Schema(
   }
 );
 
-const EmergencyPass = mongoose.model(
-  "EmergencyPass",
-  EmergencyPassSchema,
-  "EmergencyPass"
-);
+const EmergencyPass = mongoose.models.EmergencyPass || mongoose.model("EmergencyPass", EmergencyPassSchema, "EmergencyPass");
 
 export default EmergencyPass;

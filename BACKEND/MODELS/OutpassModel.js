@@ -11,6 +11,23 @@ const OutPassSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    ExpectedInDateTime: {
+      type: Date,
+      required: false,
+    },
+    ActualInDateTime: {
+      type: Date,
+      required: false,
+    },
+    LateEntry: {
+      type: Boolean,
+      default: false,
+    },
+    PassId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     StudentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Student",
@@ -54,6 +71,6 @@ const OutPassSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const OutPass = mongoose.model("OutPass", OutPassSchema, "OutPass");
+const OutPass = mongoose.models.OutPass || mongoose.model("OutPass", OutPassSchema, "OutPass");
 
 export default OutPass;

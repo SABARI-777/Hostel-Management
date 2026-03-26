@@ -1,6 +1,8 @@
-import OutPass from "../MODELS/OutpassModel.js";
-import Student from "../MODELS/Studentmodel.js";
-import Caretaker from "../MODELS/Caretakermodel.js";
+import OutPass from "../Models/OutpassModel.js";
+import Student from "../Models/Studentmodel.js";
+import Caretaker from "../Models/Caretakermodel.js";
+import Counter from "../Models/CounterModel.js";
+import Room from "../Models/RoomModel.js";
 
 // ---------------- CREATE ----------------
 export const GenerateOutpass = async (req, res) => {
@@ -11,10 +13,12 @@ export const GenerateOutpass = async (req, res) => {
       Place,
       Purpose,
       OutDateTime,
+      InDateTime,
       EntryType,
       CaretakerName,
       Status,
-      approved, // set by caretaker, not student
+      approved,
+      ExpectedInDateTime,
     } = req.body;
 
     if (
@@ -30,15 +34,32 @@ export const GenerateOutpass = async (req, res) => {
     const caretaker = await Caretaker.findOne({ Name: CaretakerName });
     if (!caretaker) return res.status(404).json({ message: "Caretaker not found!" });
 
+    // 🛡️ Block Isolation Check
+    const studentRoom = await Room.findById(student.RoomId);
+    if (studentRoom && studentRoom.HostelBlock !== caretaker.HostelBlock) {
+      return res.status(403).json({ 
+        message: `Block mismatch! You are in Block ${studentRoom.HostelBlock}, but selected a caretaker from Block ${caretaker.HostelBlock}.` 
+      });
+    }
+
+    // 🔢 Get Unique PassId
+    const counter = await Counter.findOneAndUpdate(
+      { id: "home_pass_id" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
     const outpass = new OutPass({
+      PassId: `H${counter.seq}`,
       OutDateTime,
-      InDateTime: new Date(),
+      InDateTime: InDateTime || null,
+      ExpectedInDateTime: ExpectedInDateTime || InDateTime || null,
       StudentId: student._id,
       CaretakerId: caretaker._id,
       Place,
       Purpose,
-      Status: Status || "PENDING", // default
-      approved: approved || false, // default false
+      Status: Status || "PENDING",
+      approved: approved || false,
       EntryType,
     });
 
@@ -57,7 +78,7 @@ export const GenerateOutpass = async (req, res) => {
 export const GetOutpassDetails = async (req, res) => {
   try {
     const details = await OutPass.find()
-      .populate("StudentId")
+      .populate({ path: "StudentId", populate: { path: "DepartmentId" } })
       .populate("CaretakerId");
 
     if (!details || details.length === 0) {

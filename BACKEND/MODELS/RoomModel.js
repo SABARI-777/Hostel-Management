@@ -8,7 +8,6 @@ const RoomSchema = new mongoose.Schema({
   HostelBlock: {
     type: String,
     require: true,
-    enum: ["A", "B", "C", "D"],
   },
   Capacity: {
     type: Number,
@@ -24,6 +23,6 @@ const RoomSchema = new mongoose.Schema({
   },
 });
 
-const Room = new mongoose.model("Room", RoomSchema, "Room");
+const Room = mongoose.models.Room || mongoose.model("Room", RoomSchema, "Room");
 
 export default Room;
