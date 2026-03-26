@@ -1,6 +1,6 @@
-import Caretaker from "../Models/Caretakermodel.js";
-import User from "../Models/UserModel.js";
-import Student from "../Models/Studentmodel.js";
+import Caretaker from "../MODELS/Caretakermodel.js";
+import User from "../MODELS/UserModel.js";
+import Student from "../MODELS/Studentmodel.js";
 
 // ---------------- CREATE ----------------
 export const CreateNewCaretaker = async (req, res) => {

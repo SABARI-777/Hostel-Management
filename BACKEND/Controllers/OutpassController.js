@@ -1,8 +1,8 @@
-import OutPass from "../Models/OutpassModel.js";
-import Student from "../Models/Studentmodel.js";
-import Caretaker from "../Models/Caretakermodel.js";
-import Counter from "../Models/CounterModel.js";
-import Room from "../Models/RoomModel.js";
+import OutPass from "../MODELS/OutpassModel.js";
+import Student from "../MODELS/Studentmodel.js";
+import Caretaker from "../MODELS/Caretakermodel.js";
+import Counter from "../MODELS/CounterModel.js";
+import Room from "../MODELS/RoomModel.js";
 
 // ---------------- CREATE ----------------
 export const GenerateOutpass = async (req, res) => {

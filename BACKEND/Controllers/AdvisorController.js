@@ -1,7 +1,7 @@
-import Advisor from "../Models/AdvisorModel.js";
-import User from "../Models/UserModel.js";
-import Department from "../Models/DepartmentModel.js";
-import Student from "../Models/Studentmodel.js";
+import Advisor from "../MODELS/AdvisorModel.js";
+import User from "../MODELS/UserModel.js";
+import Department from "../MODELS/DepartmentModel.js";
+import Student from "../MODELS/Studentmodel.js";
 
 // ---------------- CREATE ----------------
 export const AddAdvisor = async (req, res) => {

@@ -1,8 +1,8 @@
-import GeneralPass from "../Models/GeneralPassModel.js";
-import Student from "../Models/Studentmodel.js";
-import Caretaker from "../Models/Caretakermodel.js";
-import Counter from "../Models/CounterModel.js";
-import Room from "../Models/RoomModel.js";
+import GeneralPass from "../MODELS/GeneralPassModel.js";
+import Student from "../MODELS/Studentmodel.js";
+import Caretaker from "../MODELS/Caretakermodel.js";
+import Counter from "../MODELS/CounterModel.js";
+import Room from "../MODELS/RoomModel.js";
 
 export const createNewHomePass = async (req, res) => {
   try {

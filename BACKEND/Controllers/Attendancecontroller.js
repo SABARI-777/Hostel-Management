@@ -1,10 +1,10 @@
-import AttendanceDetails from "../Models/AttentanceModel.js";
-import Student from "../Models/Studentmodel.js";
-import OutPass from "../Models/OutpassModel.js";
-import GeneralPass from "../Models/GeneralPassModel.js";
-import EmergencyPass from "../Models/EmergencyPassModel.js";
-import Caretaker from "../Models/Caretakermodel.js";
-import Room from "../Models/RoomModel.js";
+import AttendanceDetails from "../MODELS/AttentanceModel.js";
+import Student from "../MODELS/Studentmodel.js";
+import OutPass from "../MODELS/OutpassModel.js";
+import GeneralPass from "../MODELS/GeneralPassModel.js";
+import EmergencyPass from "../MODELS/EmergencyPassModel.js";
+import Caretaker from "../MODELS/Caretakermodel.js";
+import Room from "../MODELS/RoomModel.js";
 
 // ---------------- CREATE ----------------
 export const EntryAttendance = async (req, res) => {

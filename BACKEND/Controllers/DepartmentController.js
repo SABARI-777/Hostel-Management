@@ -1,6 +1,6 @@
-import DepartmentModel from "../Models/DepartmentModel.js";
-import Student from "../Models/Studentmodel.js";
-import Advisor from "../Models/AdvisorModel.js";
+import DepartmentModel from "../MODELS/DepartmentModel.js";
+import Student from "../MODELS/Studentmodel.js";
+import Advisor from "../MODELS/AdvisorModel.js";
 
 // ================== CREATE DEPARTMENT ==================
 export const AddDepartment = async (req, res) => {
