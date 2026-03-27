@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getCaretakerDetails, updateCaretakerProfile } from "../../api/caretaker";
 import "./CaretakerDashboard.css";
+import { API } from "../../apiConfig";
 
 export default function CaretakerProfile() {
   const loggedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -76,7 +77,7 @@ export default function CaretakerProfile() {
     }
     try {
       setSubmitting(true);
-      const res = await fetch("http://localhost:3000/Admin/change-password", {
+      const res = await fetch(`${API}/Admin/users/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

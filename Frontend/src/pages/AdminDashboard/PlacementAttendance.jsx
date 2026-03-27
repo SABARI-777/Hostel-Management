@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./AdminDashboard.css";
 
-const API = "http://localhost:3000";
+import { API } from "../../apiConfig";
 
 export default function PlacementAttendance() {
   const [records, setRecords] = useState([]);

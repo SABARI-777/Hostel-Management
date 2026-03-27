@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API } from "../apiConfig";
 
 export default function AdvisorProfile() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -17,7 +18,7 @@ export default function AdvisorProfile() {
     
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:3000/Admin/change-password", {
+      const res = await fetch(`${API}/Admin/users/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

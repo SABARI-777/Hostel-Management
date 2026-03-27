@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../AdminDashboard/AdminDashboard.css";
 
-const API = "http://localhost:3000";
+import { API } from "../../apiConfig";
 
 export default function StudentDashboard() {
   const [user, setUser] = useState(null);

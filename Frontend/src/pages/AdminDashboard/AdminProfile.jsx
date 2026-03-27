@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./AdminDashboard.css";
+import { API } from "../../apiConfig";
 
 export default function AdminProfile() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -16,7 +17,7 @@ export default function AdminProfile() {
     
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:3000/Admin/change-password", {
+      const res = await fetch(`${API}/Admin/users/change-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

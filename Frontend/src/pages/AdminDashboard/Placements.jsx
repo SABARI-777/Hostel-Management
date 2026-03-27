@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./AdminDashboard.css";
 
-const API = "http://localhost:3000";
+import { API } from "../../apiConfig";
 
 // Dynamic batch options will be derived from existing data
 const DAY_OPTIONS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];

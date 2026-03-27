@@ -1,11 +1,6 @@
-export const API = "http://localhost:3000";
+import { API } from "../apiConfig";
 
-export const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return token ? { "Authorization": `Bearer ${token}` } : {};
-};
-
-
+export { API, getAuthHeaders } from "../apiConfig";
 
 export const registerUser = (data) =>
   fetch(API + "/register", {
@@ -13,7 +8,6 @@ export const registerUser = (data) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   }).then((res) => res.json());
-
 
 export const verifyOTP = (data) =>
   fetch(API + "/verify-otp", {
