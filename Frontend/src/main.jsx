@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
+import { API } from "./apiConfig";
 
 const { fetch: originalFetch } = window;
 
@@ -14,10 +15,26 @@ window.fetch = async (...args) => {
 
   // Identify if this is a request to our backend
   const urlStr = url.toString();
-  const isBackendRequest = 
-    urlStr.includes("hostel-management-cykl.onrender.com") || 
-    urlStr.includes(":3000") || 
-    urlStr.startsWith("/");
+  const isBackendRequest = urlStr.startsWith(API) || urlStr.startsWith("/");
+  
+  const isPublicEndpoint = 
+    urlStr.includes("/login") || 
+    urlStr.includes("/register") || 
+    urlStr.includes("/verify-otp");
+
+  // Prevent browser 401 network error logs by intercepting unauthorized requests locally
+  if (!isValidToken && isBackendRequest && !isPublicEndpoint) {
+    const currentPath = window.location.pathname;
+    if (currentPath !== "/" && currentPath !== "/login") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/";
+    }
+    return new Response(JSON.stringify({ success: false, message: "Access Denied: No Token Provided" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
 
   if (isValidToken && isBackendRequest) {
     options = options || {};

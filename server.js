@@ -3,26 +3,35 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+
 import Routes from "./BACKEND/Routes/Routes.js";
-import {ConnectDB} from "./DBConnect.js"
-
-ConnectDB();
-
-
-
+import { ConnectDB } from "./DBConnect.js";
 
 const app = express();
+
 app.use(cors({
-  origin: "*",
+  origin: "https://kithostel.vercel.app",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
+
 app.use(express.json());
 
 app.use("/", Routes);
 
-const JWT_SECRET = (process.env.JWT_SECRET || "fallback_secret").trim();
+const startServer = async () => {
+  try {
 
-app.listen(process.env.PORT, () => {
-  console.log("server running on 3000");
-});
+    await ConnectDB();
+
+    app.listen(process.env.PORT || 3000, () => {
+      console.log("Server running on 3000");
+    });
+
+  } catch (error) {
+    console.log("DB Connection Failed:", error);
+  }
+};
+
+startServer();

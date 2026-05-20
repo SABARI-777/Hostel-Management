@@ -24,7 +24,7 @@ export const LoginUser = async (req, res) => {
     const user = await User.findOne({ Email });
 
     if (!user || !(await user.comparePassword(Password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(200).json({ success: false, message: "Invalid email or password" });
     }
 
     // Generate JWT Token
@@ -66,7 +66,7 @@ export const LoginUser = async (req, res) => {
           }
       });
   } catch (err) {
-    return res.status(401).json({ error: true, message: err.message });
+    return res.status(200).json({ success: false, error: true, message: err.message });
   }
 };
 
