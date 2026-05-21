@@ -34,7 +34,7 @@ export default function Register() {
         setError("Registration failed");
       }
     } catch (err) {
-      setError("Network error occurred.");
+      setError("Network error occurred."+err.message);
     } finally {
       setIsLoading(false);
     }

@@ -3,7 +3,7 @@ import Student from "../MODELS/Studentmodel.js";
 import Caretaker from "../MODELS/Caretakermodel.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
