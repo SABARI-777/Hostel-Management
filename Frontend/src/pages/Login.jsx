@@ -41,7 +41,7 @@ export default function Login() {
          setError("Login failed");
       }
     } catch (err) {
-      setError("Network or server error occurred.");
+      setError("Network or server error occurred."+ err.message);
     } finally {
       setIsLoading(false);
     }
