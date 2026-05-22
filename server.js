@@ -9,8 +9,20 @@ import { ConnectDB } from "./DBConnect.js";
 
 const app = express();
 
+const allowedOrigins = [
+  "https://kithostel.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
+
 app.use(cors({
-  origin: "https://kithostel.vercel.app",
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith("http://localhost:")) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true

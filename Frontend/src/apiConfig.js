@@ -1,4 +1,6 @@
-export const API = import.meta.env.VITE_API_URL || "https://hostel-management-cykl.onrender.com";
+export const API = import.meta.env.PROD 
+  ? "https://hostel-management-cykl.onrender.com" 
+  : (import.meta.env.VITE_API_URL || "http://localhost:3000");
 
 export const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
