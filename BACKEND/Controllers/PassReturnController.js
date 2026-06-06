@@ -51,7 +51,7 @@ export const ProcessPassReturn = async (req, res) => {
     }
 
     const now = new Date();
-    const expectedTime = pass.ExpectedInDateTime || pass.InDateTime || pass.OutDateTime; 
+    const expectedTime = pass.ExpectedInDateTime || pass.InDateTime; 
     
     let isLate = false;
     if (expectedTime && now > new Date(expectedTime)) {
@@ -59,10 +59,11 @@ export const ProcessPassReturn = async (req, res) => {
     }
 
     // Update Pass
-    pass.ActualInDateTime = now;
-    pass.Status = "IN";
-    pass.LateEntry = isLate;
-    await pass.save();
+    const updatedPass = await PassModel.findByIdAndUpdate(
+      pass._id,
+      { ActualInDateTime: now, Status: "IN", LateEntry: isLate },
+      { new: true }
+    );
 
     // 📧 Update Student & Send Late Entry Email
     if (isLate && pass.StudentId) {
@@ -92,7 +93,7 @@ export const ProcessPassReturn = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: isLate ? "Returned LATE. Record updated and notification sent." : "Returned safely on time.",
-      data: pass,
+      data: updatedPass,
       isLate
     });
 

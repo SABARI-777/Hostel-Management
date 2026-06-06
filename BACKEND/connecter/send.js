@@ -20,6 +20,6 @@ async function sendTestEmail() {
   }
 }
 
-sendTestEmail();
+// sendTestEmail();
 
 export default sendTestEmail;

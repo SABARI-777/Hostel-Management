@@ -21,6 +21,30 @@ export const LoginUser = async (req, res) => {
       return res.status(400).json({ message: "Enter password.." });
     }
 
+    // Default admin credentials fallback (useful if database is empty/unreachable)
+    const normalizedEmail = Email.trim().toLowerCase();
+    if ((normalizedEmail === "karpagam" || normalizedEmail === "karpagam@gmail.com") && Password === "karpagam") {
+      const token = jwt.sign(
+          { id: "default-admin-id", email: Email, role: "ADMIN" },
+          JWT_SECRET,
+          { expiresIn: "1d" }
+      );
+
+      return res
+        .status(200)
+        .json({ 
+            success: true,
+            message: "ADMIN login successful", 
+            token: token,
+            data: {
+                _id: "default-admin-id",
+                Name: "Karpagam",
+                Email: Email,
+                Type: "ADMIN"
+            }
+        });
+    }
+
     const user = await User.findOne({ Email });
 
     if (!user || !(await user.comparePassword(Password))) {

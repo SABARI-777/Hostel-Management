@@ -38,12 +38,6 @@ export const MakeApprove = async (req, res) => {
       return res.status(404).json({ message: "Pass not found for this ID" });
     }
 
-    if (!pass.CaretakerId) {
-      return res
-        .status(404)
-        .json({ message: "Caretaker not found for this pass" });
-    }
-
     pass.Approved = "YES";
     pass.approved = "YES";
     pass.Status = "OUT";
@@ -94,12 +88,6 @@ export const CancelApprove = async (req, res) => {
       return res.status(404).json({ message: "Pass not found for this ID" });
     }
 
-    if (!pass.CaretakerId) {
-      return res
-        .status(404)
-        .json({ message: "Caretaker not found for this pass" });
-    }
-
     pass.Approved = "CANCELL";
     pass.approved = "CANCELL";
     await pass.save();
@@ -142,16 +130,16 @@ export const MarkEntry = async (req, res) => {
     }
 
     const now = new Date();
-    pass.ActualInDateTime = now;
-    pass.Status = "IN";
+    let isLate = false;
 
     // Expected In vs Actual In
-    const expected = pass.ExpectedInDateTime || pass.InDateTime || pass.OutDateTime; 
+    const expected = pass.ExpectedInDateTime || pass.InDateTime; 
 
     if (expected && now > new Date(expected)) {
-      pass.LateEntry = true;
+      isLate = true;
       
-      const student = await Student.findById(pass.StudentId._id);
+      const studentLookupId = (pass.StudentId && pass.StudentId._id) ? pass.StudentId._id : pass.StudentId;
+      const student = await Student.findById(studentLookupId);
       if (student) {
         student.LateEntryCount = (student.LateEntryCount || 0) + 1;
         await student.save();
@@ -169,12 +157,15 @@ export const MarkEntry = async (req, res) => {
       }
     }
 
-    await pass.save();
+    await PassModel.updateOne(
+      { _id: pass._id },
+      { ActualInDateTime: now, Status: "IN", LateEntry: isLate }
+    );
 
     return res.status(200).json({
       message: "Student marked as returned successfully",
-      late: pass.LateEntry,
-      data: pass
+      late: isLate,
+      data: { ...pass.toObject(), ActualInDateTime: now, Status: "IN", LateEntry: isLate }
     });
   } catch (error) {
     return res.status(500).json({ message: "Error marking entry", error: error.message });

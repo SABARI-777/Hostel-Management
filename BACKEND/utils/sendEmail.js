@@ -3,10 +3,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// We expect POSTMARK_API_TOKEN and FROM_EMAIL in your .env file
-// If they are missing, it defaults to the placeholder text
-const POSTMARK_API_TOKEN = "0fc622b5-eb77-4c4a-870c-b1b52f8ee719" || "YOUR_NEW_API_TOKEN";
-const FROM_EMAIL = process.env.FROM_EMAIL || "your_verified_email@domain.com";
+// Load config from environment variables
+const POSTMARK_API_TOKEN = (process.env.POSTMARK_API_TOKEN || "0fc622b5-eb77-4c4a-870c-b1b52f8ee719").trim();
+const FROM_EMAIL = (process.env.FROM_EMAIL || "your_verified_email@domain.com").trim();
 
 const client = new postmark.ServerClient(POSTMARK_API_TOKEN);
 
@@ -46,8 +45,9 @@ export const sendOTP = async (email, otp) => {
 
 export const sendLateEntryEmail = async (parentEmail, studentName, expectedDate, actualDate, passDetails = {}) => {
   try {
-    const formattedExp = new Date(expectedDate).toLocaleString();
-    const formattedAct = new Date(actualDate).toLocaleString();
+    const isValidDate = (d) => d && !isNaN(new Date(d).getTime());
+    const formattedExp = isValidDate(expectedDate) ? new Date(expectedDate).toLocaleString() : "N/A";
+    const formattedAct = isValidDate(actualDate) ? new Date(actualDate).toLocaleString() : new Date().toLocaleString();
     const { Place = "N/A", Purpose = "N/A" } = passDetails;
 
     const htmlTemplate = `

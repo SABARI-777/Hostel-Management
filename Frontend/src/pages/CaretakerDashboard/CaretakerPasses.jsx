@@ -9,6 +9,17 @@ export default function CaretakerPasses() {
   const [statusFilter, setStatusFilter] = useState("All");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
+  const [pageHome, setPageHome] = useState(1);
+  const [pageNormal, setPageNormal] = useState(1);
+  const [pageEmergency, setPageEmergency] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setPageHome(1);
+    setPageNormal(1);
+    setPageEmergency(1);
+  }, [searchTerm, statusFilter]);
+
   const fetchPasses = async () => {
     try {
       setLoading(true);
@@ -46,74 +57,117 @@ export default function CaretakerPasses() {
   if (loading) return <div className="glass-card">Loading Passes...</div>;
   if (!passData) return <div className="glass-card">Error loading pass data.</div>;
 
-  const renderPassTable = (title, passList, type) => (
-    <div className="glass-card" style={{ padding: '0', overflow: 'hidden', marginBottom: '40px' }}>
-      <h3 style={{ padding: '25px 30px', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{title}</h3>
-      <table className="ct-table">
-        <thead>
-          <tr>
-            <th>Pass ID</th>
-            <th>Student Info</th>
-            <th>Type/Purpose</th>
-            <th>Schedule</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {passList
-            .filter(p => {
-               const matchesSearch = searchTerm === "" || 
-                  (p.StudentId?.Name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  (p.StudentId?.RegisterNumber || "").includes(searchTerm);
-               const currentStatus = (p.Approved === "YES" || p.approved === "YES") ? "APPROVED" : (p.Approved === "CANCELL" || p.approved === "CANCELL") ? "CANCELLED" : "PENDING";
-               const matchesStatus = statusFilter === "All" || currentStatus === statusFilter;
-               return matchesSearch && matchesStatus;
-            })
-            .map((p) => (
-              <tr key={p._id}>
-                <td style={{ fontWeight: 'bold', color: '#60a5fa' }}>{p.PassId}</td>
-                <td>
-                  <div style={{ fontWeight: '700' }}>{p.StudentId?.Name || "Student"}</div>
-                  <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>{p.StudentId?.RegisterNumber}</div>
-                </td>
-                <td>
-                    <div style={{ fontWeight: '600', color: '#6ee7b7' }}>{type === 1 ? "OUT PASS" : type === 2 ? "GENERAL" : "EMERGENCY"}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{p.Purpose}</div>
-                </td>
-                <td>
-                    <div>O: {p.OutDateTime ? new Date(p.OutDateTime).toLocaleDateString() : "N/A"}</div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.5 }}>E.In: {p.ExpInDateTime ? new Date(p.ExpInDateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A"}</div>
-                </td>
-                <td>
-                  <span className={`badge ${(p.Approved === "YES" || p.approved === "YES") ? "badge-approved" : (p.Approved === "CANCELL" || p.approved === "CANCELL") ? "badge-cancelled" : "badge-pending"}`}>
-                    {(p.Approved === "YES" || p.approved === "YES") ? "APPROVED" : (p.Approved === "CANCELL" || p.approved === "CANCELL") ? "CANCELLED" : "PENDING"}
-                  </span>
-                </td>
-                <td>
-                  {!(p.Approved === "YES" || p.approved === "YES" || p.Approved === "CANCELL" || p.approved === "CANCELL") && (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleAction(p._id, type, "APPROVE")} className="action-btn btn-approve">Grant</button>
-                      <button onClick={() => handleAction(p._id, type, "CANCEL")} className="action-btn btn-cancel">Deny</button>
-                    </div>
-                  )}
-                  {(p.Approved === "YES" || p.approved === "YES") && p.Status === "OUT" && (
-                    <button onClick={() => handleAction(p._id, type, "RETURN")} className="action-btn btn-approve" style={{ background: '#ffa500', width: '100%' }}>Mark In</button>
-                  )}
-                  {p.Status === "IN" && (p.Approved === "YES" || p.approved === "YES") && <span style={{ color: '#6ee7b7', fontSize: '0.85rem', fontWeight: 'bold' }}>Returned</span>}
-                </td>
-              </tr>
-            ))
-          }
-          {passList.length === 0 && (
+  const renderPassTable = (title, passList, type) => {
+    let currentPage = pageHome;
+    let setCurrentPage = setPageHome;
+    if (type === 2) {
+      currentPage = pageNormal;
+      setCurrentPage = setPageNormal;
+    } else if (type === 3) {
+      currentPage = pageEmergency;
+      setCurrentPage = setPageEmergency;
+    }
+
+    const filtered = passList.filter(p => {
+       const matchesSearch = searchTerm === "" || 
+          (p.StudentId?.Name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (p.StudentId?.RegisterNumber || "").includes(searchTerm);
+       const currentStatus = (p.Approved === "YES" || p.approved === "YES") ? "APPROVED" : (p.Approved === "CANCELL" || p.approved === "CANCELL") ? "CANCELLED" : "PENDING";
+       const matchesStatus = statusFilter === "All" || currentStatus === statusFilter;
+       return matchesSearch && matchesStatus;
+    });
+
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+    return (
+      <div className="glass-card" style={{ padding: '0', overflow: 'hidden', marginBottom: '40px' }}>
+        <h3 style={{ padding: '25px 30px', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{title}</h3>
+        <table className="ct-table">
+          <thead>
             <tr>
-              <td colSpan="5" style={{ textAlign: "center", padding: '20px' }}>No {title.toLowerCase()} recorded.</td>
+              <th>Pass ID</th>
+              <th>Student Info</th>
+              <th>Type/Purpose</th>
+              <th>Schedule</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
+          </thead>
+          <tbody>
+            {paginated && paginated.length > 0 ? (
+              paginated.map((p) => (
+                <tr key={p._id}>
+                  <td style={{ fontWeight: 'bold', color: '#60a5fa' }}>{p.PassId}</td>
+                  <td>
+                    <div style={{ fontWeight: '700' }}>{p.StudentId?.Name || "Student"}</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>{p.StudentId?.RegisterNumber}</div>
+                  </td>
+                  <td>
+                      <div style={{ fontWeight: '600', color: '#6ee7b7' }}>{type === 1 ? "OUT PASS" : type === 2 ? "GENERAL" : "EMERGENCY"}</div>
+                      <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{p.Purpose}</div>
+                  </td>
+                  <td>
+                      <div>O: {p.OutDateTime ? new Date(p.OutDateTime).toLocaleDateString() : "N/A"}</div>
+                      <div style={{ fontSize: '0.8rem', opacity: 0.5 }}>E.In: {p.ExpInDateTime ? new Date(p.ExpInDateTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "N/A"}</div>
+                  </td>
+                  <td>
+                    <span className={`badge ${(p.Approved === "YES" || p.approved === "YES") ? "badge-approved" : (p.Approved === "CANCELL" || p.approved === "CANCELL") ? "badge-cancelled" : "badge-pending"}`}>
+                      {(p.Approved === "YES" || p.approved === "YES") ? "APPROVED" : (p.Approved === "CANCELL" || p.approved === "CANCELL") ? "CANCELLED" : "PENDING"}
+                    </span>
+                  </td>
+                  <td>
+                    {!(p.Approved === "YES" || p.approved === "YES" || p.Approved === "CANCELL" || p.approved === "CANCELL") && (
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => handleAction(p._id, type, "APPROVE")} className="action-btn btn-approve">Grant</button>
+                        <button onClick={() => handleAction(p._id, type, "CANCEL")} className="action-btn btn-cancel">Deny</button>
+                      </div>
+                    )}
+                    {(p.Approved === "YES" || p.approved === "YES") && p.Status === "OUT" && (
+                      <button onClick={() => handleAction(p._id, type, "RETURN")} className="action-btn btn-approve" style={{ background: '#ffa500', width: '100%' }}>Mark In</button>
+                    )}
+                    {p.Status === "IN" && (p.Approved === "YES" || p.approved === "YES") && <span style={{ color: '#6ee7b7', fontSize: '0.85rem', fontWeight: 'bold' }}>Returned</span>}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" style={{ textAlign: "center", padding: '20px' }}>No {title.toLowerCase()} found.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* PAGINATION CONTROLS */}
+        {totalPages > 1 && (
+          <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', marginBottom: '20px', alignItems: 'center' }}>
+            <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+            <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum = currentPage - 2 + i;
+              if (currentPage <= 2) pageNum = i + 1;
+              else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+              if (pageNum < 1 || pageNum > totalPages) return null;
+              return (
+                <button 
+                  key={pageNum} 
+                  onClick={() => setCurrentPage(pageNum)} 
+                  className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                  style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+            <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+            <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="caretaker-passes">

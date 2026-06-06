@@ -10,6 +10,7 @@ export default function Register() {
     MobileNumber: "",
     Type: "STUDENT",
   });
+  
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -42,60 +43,20 @@ export default function Register() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-card" style={{ textAlign: "center" }}>
         <div className="auth-header">
-          <h2>Create Account</h2>
-          <p>Join the Hostel Management System</p>
+          <h2>Public Registration Disabled</h2>
+          <p style={{ color: "#f87171", fontWeight: "bold", marginTop: "15px", fontSize: "1.1rem" }}>
+            Self-registration is not allowed.
+          </p>
+          <p style={{ opacity: 0.8, fontSize: "0.95rem", marginTop: "10px" }}>
+            Please contact the Hostel Administrator to create your user login and assign your portal access details.
+          </p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
-
-        <form onSubmit={submit} className="auth-input-group">
-          <input 
-            className="auth-input"
-            name="Email" 
-            type="email"
-            placeholder="Email Address" 
-            required
-            onChange={change} 
-          />
-          <input 
-            className="auth-input"
-            name="Password" 
-            placeholder="Password" 
-            type="password" 
-            required
-            onChange={change} 
-            minLength={4}
-          />
-          <input 
-            className="auth-input"
-            name="MobileNumber" 
-            placeholder="Mobile Number" 
-            required
-            onChange={change} 
-          />
-          
-          <select 
-            className="auth-input auth-select" 
-            name="Type" 
-            onChange={change}
-            defaultValue="STUDENT"
-          >
-            <option value="STUDENT">Student</option>
-            <option value="CARETAKER">Caretaker</option>
-            <option value="ADVISOR">Advisor</option>
-            <option value="ADMIN">Admin</option>
-          </select>
-
-          <button className="auth-button" type="submit" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Register"}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          Already have an account? 
-          <Link to="/login" className="auth-link">Login</Link>
+        <div className="auth-footer" style={{ marginTop: "30px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "20px" }}>
+          Already have account credentials? 
+          <Link to="/login" className="auth-link" style={{ marginLeft: "5px" }}>Login Here</Link>
         </div>
       </div>
     </div>

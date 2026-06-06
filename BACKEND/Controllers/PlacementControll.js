@@ -10,6 +10,21 @@ export const AddPlacement = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    if (!ClassTiming || !ClassTiming.Start || !ClassTiming.End) {
+      return res.status(400).json({ message: "Class start and end timings are required." });
+    }
+
+    if (!Array.isArray(Days) || Days.length === 0) {
+      return res.status(400).json({ message: "At least one operating day must be selected." });
+    }
+
+    const duplicateBatch = await Placement.findOne({ 
+      BatchName: { $regex: new RegExp(`^${BatchName.trim()}$`, "i") } 
+    });
+    if (duplicateBatch) {
+      return res.status(409).json({ message: `Placement Batch '${BatchName}' already exists.` });
+    }
+
     const newBatch = new Placement({
       BatchName,
       Days,
@@ -53,6 +68,22 @@ export const UpdateBatch = async (req, res) => {
 
     if (!id || !BatchName || !Days || !ClassTiming || !Status) {
       return res.status(400).json({ message: "All fields including id are required." });
+    }
+
+    if (!ClassTiming || !ClassTiming.Start || !ClassTiming.End) {
+      return res.status(400).json({ message: "Class start and end timings are required." });
+    }
+
+    if (!Array.isArray(Days) || Days.length === 0) {
+      return res.status(400).json({ message: "At least one operating day must be selected." });
+    }
+
+    const duplicateBatch = await Placement.findOne({ 
+      _id: { $ne: id },
+      BatchName: { $regex: new RegExp(`^${BatchName.trim()}$`, "i") } 
+    });
+    if (duplicateBatch) {
+      return res.status(409).json({ message: `Placement Batch '${BatchName}' already exists.` });
     }
 
     const updatedBatch = await Placement.findByIdAndUpdate(

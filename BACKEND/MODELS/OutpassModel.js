@@ -61,7 +61,7 @@ const OutPassSchema = new mongoose.Schema(
     EntryType: {
       type: String,
       require: true,
-      enum: ["MANUAL", "BIOMATRIC"],
+      enum: ["MANUAL", "BIOMETRIC", "BIOMATRIC"],
     },
     Type: {
       type: String,

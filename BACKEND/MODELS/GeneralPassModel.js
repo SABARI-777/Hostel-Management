@@ -50,7 +50,7 @@ const GeneralPassSchema = new mongoose.Schema(
     EntryType: {
       type: String,
       required: true,
-      enum: ["MANUAL", "BIOMETRIC"], // fixed spelling
+      enum: ["MANUAL", "BIOMETRIC", "BIOMATRIC"],
     },
     StudentId: {
       type: mongoose.Schema.Types.ObjectId,

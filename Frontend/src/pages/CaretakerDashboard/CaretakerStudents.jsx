@@ -10,6 +10,12 @@ export default function CaretakerStudents() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [roomFilter, setRoomFilter] = useState("All");
   const [yearFilter, setYearFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, deptFilter, statusFilter, roomFilter, yearFilter]);
   
   // CRUD States
   const [showModal, setShowModal] = useState(false);
@@ -133,7 +139,42 @@ export default function CaretakerStudents() {
     }
   };
 
-  const departments = [...new Set(students.map(s => s.DepartmentId?.DepartmentName).filter(Boolean))];
+  const getUniqueCaseInsensitive = (arr) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      if (!item) return false;
+      const upper = item.trim().toUpperCase();
+      if (seen.has(upper)) return false;
+      seen.add(upper);
+      return true;
+    }).map(item => item.trim());
+  };
+
+  const uniqueDepts = getUniqueCaseInsensitive(students.map(s => s.DepartmentId?.DepartmentName));
+
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = searchTerm === "" || 
+      (s.Name && s.Name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.RegisterNumber && String(s.RegisterNumber).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.RollNumber && String(s.RollNumber).toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesDept = deptFilter === "All" || 
+      (s.DepartmentId?.DepartmentName && s.DepartmentId.DepartmentName.trim().toUpperCase() === deptFilter.toUpperCase());
+    
+    const matchesYear = yearFilter === "All" || calculateYear(s.StartYear) === yearFilter;
+    
+    const matchesStatus = statusFilter === "All" || 
+      (s.Status && s.Status.trim().toUpperCase() === statusFilter.toUpperCase());
+    
+    const matchesRoom = roomFilter === "All" || 
+      (s.RoomId?.RoomNumber && String(s.RoomId.RoomNumber) === roomFilter);
+    
+    return matchesSearch && matchesDept && matchesYear && matchesStatus && matchesRoom;
+  });
+
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedStudents = filteredStudents.slice(startIndex, startIndex + itemsPerPage);
 
   if (loading) return <div className="glass-card">Loading Students...</div>;
 
@@ -162,7 +203,7 @@ export default function CaretakerStudents() {
                   <label className="filter-label">Department</label>
                   <select className="filter-control" value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
                       <option value="All">All Departments</option>
-                      {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                      {uniqueDepts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
               </div>
 
@@ -217,18 +258,8 @@ export default function CaretakerStudents() {
             </tr>
           </thead>
           <tbody>
-            {students
-              .filter(s => {
-                const matchesSearch = searchTerm === "" || 
-                    s.Name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (s.RegisterNumber || "").includes(searchTerm);
-                const matchesDept = deptFilter === "All" || s.DepartmentId?.DepartmentName === deptFilter;
-                const matchesYear = yearFilter === "All" || calculateYear(s.StartYear) === yearFilter;
-                const matchesStatus = statusFilter === "All" || s.Status === statusFilter;
-                const matchesRoom = roomFilter === "All" || String(s.RoomId?.RoomNumber) === roomFilter;
-                return matchesSearch && matchesDept && matchesYear && matchesStatus && matchesRoom;
-              })
-              .map((student) => (
+            {paginatedStudents && paginatedStudents.length > 0 ? (
+              paginatedStudents.map((student) => (
                 <tr key={student._id}>
                   <td>
                     <div style={{ fontWeight: '700' }}>{student.Name}</div>
@@ -251,8 +282,8 @@ export default function CaretakerStudents() {
                     </div>
                   </td>
                 </tr>
-              ))}
-            {students.length === 0 && (
+              ))
+            ) : (
               <tr>
                 <td colSpan="7" style={{ textAlign: "center", padding: '20px' }}>No students found in your block.</td>
               </tr>
@@ -260,6 +291,33 @@ export default function CaretakerStudents() {
           </tbody>
         </table>
       </div>
+
+      {/* PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum = currentPage - 2 + i;
+            if (currentPage <= 2) pageNum = i + 1;
+            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+            if (pageNum < 1 || pageNum > totalPages) return null;
+            return (
+              <button 
+                key={pageNum} 
+                onClick={() => setCurrentPage(pageNum)} 
+                className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+          <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+        </div>
+      )}
 
       {showModal && (
         <div className="modal-overlay">

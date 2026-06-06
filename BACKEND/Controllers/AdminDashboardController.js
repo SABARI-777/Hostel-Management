@@ -93,6 +93,16 @@ export const GetAdminStats = async (req, res) => {
     });
 
     // 2. Hostel Infrastructure Breakdown
+    // Sync room occupancy with actual student counts
+    const roomsToSync = await Room.find();
+    for (const room of roomsToSync) {
+      const actualOccupancy = await Student.countDocuments({ RoomId: room._id });
+      if (room.Occupancy !== actualOccupancy) {
+        room.Occupancy = actualOccupancy;
+        await room.save();
+      }
+    }
+
     const allRooms = await Room.find();
     const hostelData = {
       totalCapacity: 0,

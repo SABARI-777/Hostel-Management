@@ -35,7 +35,6 @@ export default function Overview() {
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ color: "white", margin: "0", fontSize: '2.2rem' }}>Hostel Overview</h2>
-        <button className="dash-btn" onClick={() => window.print()} style={{ height: 'auto', padding: '10px 20px' }}>Print Records</button>
       </div>
       
       {/* 1. STUDENT METRICS */}

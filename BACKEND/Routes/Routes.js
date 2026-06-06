@@ -17,6 +17,7 @@ import EmergencypassRoute from "./EmergencyRoute.js";
 import GenralpassRoute from "./GenralPassRoute.js";
 import AdminDashboardRouter from "./AdminDashboardRoute.js";
 import PassReturnRouter from "./PassReturnRoute.js";
+import ComplaintRouter from "./ComplaintRoute.js";
 
 import { CreateNewUser, verifyOTP } from "../Controllers/UserRegisterController.js";
 
@@ -24,7 +25,9 @@ const Routes = express.Router();
 
 // 🌍 Public Routes
 Routes.post("/login", LoginUser);
-Routes.post("/register", CreateNewUser);
+Routes.post("/register", (req, res) => {
+  return res.status(403).json({ message: "Public registration is disabled. Only Administrators can create accounts." });
+});
 Routes.post("/verify-otp", verifyOTP);
 
 // 🛡️ ROLE-BASED PORTALS
@@ -53,10 +56,11 @@ Routes.use("/Admin/passes/out",           authenticateToken, authorizeRoles(...S
 Routes.use("/Admin/passes/general",       authenticateToken, authorizeRoles(...SharedRoles), GenralpassRoute);
 Routes.use("/Admin/passes/emergency",     authenticateToken, authorizeRoles(...SharedRoles), EmergencypassRoute);
 Routes.use("/Admin/passes/return",        authenticateToken, authorizeRoles(...SharedRoles), PassReturnRouter);
-Routes.use("/Admin/passes/approve",       authenticateToken, authorizeRoles(...SharedRoles), ApprovealRouter);
+Routes.use("/Admin/passes",               authenticateToken, authorizeRoles(...SharedRoles), ApprovealRouter);
 
 // User management & password change
 Routes.use("/Admin/users",                authenticateToken, authorizeRoles(...SharedRoles), Userrouter);
+Routes.use("/Admin/complaints",           authenticateToken, authorizeRoles(...SharedRoles), ComplaintRouter);
 
 // Admin-only
 Routes.use("/Admin/students",             authenticateToken, authorizeRoles("ADMIN"), StudentRouter);

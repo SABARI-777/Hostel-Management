@@ -1,8 +1,9 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import VerifyOTP from "./pages/VerifyOtp";
 import AdvisorDashboard from "./pages/AdvisorDashboard/AdvisorDashboard";
+import AiChatBot from "./components/AiChatBot";
 
 // Admin Dashboard Components
 import AdminLayout from "./pages/AdminDashboard/AdminLayout";
@@ -19,6 +20,7 @@ import PassManagement from "./pages/AdminDashboard/PassManagement";
 import UserAccounts from "./pages/AdminDashboard/UserAccounts";
 import AdminProfile from "./pages/AdminDashboard/AdminProfile";
 import StudentDashboard from "./pages/StudentDashboard/StudentDashboard";
+import Complaints from "./pages/AdminDashboard/Complaints";
 
 // Caretaker Dashboard Components
 import CaretakerLayout from "./pages/CaretakerDashboard/CaretakerLayout";
@@ -30,6 +32,9 @@ import CaretakerPlacementAttendance from "./pages/CaretakerDashboard/CaretakerPl
 import CaretakerProfile from "./pages/CaretakerDashboard/CaretakerProfile";
 
 export default function App() {
+  const location = useLocation();
+  const showChatbot = !["/login", "/register", "/verify-otp", "/"].includes(location.pathname);
+
   return (
     <div style={{ margin: 0, padding: 0, minHeight: '100vh', width: '100%' }}>
       <Routes>
@@ -56,6 +61,7 @@ export default function App() {
           <Route path="students" element={<Students />} />
           <Route path="placement-attendance" element={<PlacementAttendance />} />
           <Route path="passes" element={<PassManagement />} />
+          <Route path="complaints" element={<Complaints />} />
           <Route path="accounts" element={<UserAccounts />} />
           <Route path="profile" element={<AdminProfile />} />
         </Route>
@@ -71,6 +77,7 @@ export default function App() {
         </Route>
 
       </Routes>
+      {showChatbot && <AiChatBot />}
     </div>
   );
 }

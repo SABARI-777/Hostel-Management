@@ -78,6 +78,12 @@ export default function AdminLayout() {
             Pass Management
           </NavLink>
           <NavLink 
+            to="/admin-dashboard/complaints" 
+            className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
+          >
+            Complaints
+          </NavLink>
+          <NavLink 
             to="/admin-dashboard/accounts" 
             className={({ isActive }) => isActive ? "sidebar-link active" : "sidebar-link"}
           >

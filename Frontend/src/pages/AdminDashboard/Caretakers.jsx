@@ -14,6 +14,12 @@ export default function Caretakers() {
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const fetchCaretakers = async () => {
     try {
@@ -96,6 +102,17 @@ export default function Caretakers() {
     setEditId(null);
   };
 
+  const filteredCaretakers = caretakers.filter(ct => 
+    searchTerm === "" || 
+    (ct.Name && ct.Name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+    (ct.UserID?.Email && ct.UserID.Email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (ct.HostelBlock && ct.HostelBlock.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const totalPages = Math.ceil(filteredCaretakers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCaretakers = filteredCaretakers.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="dashboard-card">
       <h3>Manage Caretakers</h3>
@@ -164,13 +181,8 @@ export default function Caretakers() {
           </tr>
         </thead>
         <tbody>
-          {caretakers
-            .filter(ct => 
-              searchTerm === "" || 
-              ct.Name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-              (ct.UserID?.Email || "").toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .map((ct) => (
+          {paginatedCaretakers && paginatedCaretakers.length > 0 ? (
+            paginatedCaretakers.map((ct) => (
             <tr key={ct._id}>
               <td><strong>{ct.Name}</strong></td>
               <td>{ct.UserID?.Email || "Unmapped"}</td>
@@ -179,8 +191,8 @@ export default function Caretakers() {
                 <span style={{
                   padding: "4px 8px", 
                   borderRadius: "4px",
-                  background: (ct.Status === "ACTIVE" || ct.Status === "Active") ? "rgba(40, 167, 69, 0.2)" : "rgba(220, 53, 69, 0.2)",
-                  color: (ct.Status === "ACTIVE" || ct.Status === "Active") ? "#28a745" : "#dc3545"
+                  background: (ct.Status && ct.Status.trim().toUpperCase() === "ACTIVE") ? "rgba(40, 167, 69, 0.2)" : "rgba(220, 53, 69, 0.2)",
+                  color: (ct.Status && ct.Status.trim().toUpperCase() === "ACTIVE") ? "#28a745" : "#dc3545"
                 }}>
                   {ct.Status}
                 </span>
@@ -190,14 +202,41 @@ export default function Caretakers() {
                 <button className="dash-btn danger" style={{ padding: "6px 12px", fontSize: "0.8rem", height: "auto" }} onClick={() => handleDelete(ct._id)}>Delete</button>
               </td>
             </tr>
-          ))}
-          {caretakers.length === 0 && (
+          ))
+          ) : (
             <tr>
-              <td colSpan="5" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No Caretakers assigned</td>
+              <td colSpan="5" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No Caretakers found.</td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {/* PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum = currentPage - 2 + i;
+            if (currentPage <= 2) pageNum = i + 1;
+            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+            if (pageNum < 1 || pageNum > totalPages) return null;
+            return (
+              <button 
+                key={pageNum} 
+                onClick={() => setCurrentPage(pageNum)} 
+                className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+          <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+        </div>
+      )}
     </div>
   );
 }

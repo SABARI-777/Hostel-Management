@@ -14,6 +14,12 @@ export default function PassManagement() {
   const [yearFilter, setYearFilter] = useState("All");
   const [deptFilter, setDeptFilter] = useState("All");
   const [depts, setDepts] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, passIdFilter, yearFilter, deptFilter, activeTab]);
 
   const calculateYear = (startYear) => {
     if (!startYear) return "N/A";
@@ -140,7 +146,8 @@ export default function PassManagement() {
         (pass.StudentId?.RegisterNumber || "").includes(searchTerm);
       const matchesPassId = passIdFilter === "" || (pass.PassId && pass.PassId.toString() === passIdFilter);
       const matchesYear = yearFilter === "All" || calculateYear(pass.StudentId?.StartYear) === yearFilter;
-      const matchesDept = deptFilter === "All" || pass.StudentId?.DepartmentId?.DepartmentName === deptFilter;
+      const matchesDept = deptFilter === "All" || 
+        (pass.StudentId?.DepartmentId?.DepartmentName && pass.StudentId.DepartmentId.DepartmentName.trim().toUpperCase() === deptFilter.toUpperCase());
       
       return matchesSearch && matchesPassId && matchesYear && matchesDept;
     });
@@ -153,7 +160,24 @@ export default function PassManagement() {
     setDeptFilter("All");
   };
 
+  const getUniqueCaseInsensitive = (arr) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      if (!item) return false;
+      const upper = item.trim().toUpperCase();
+      if (seen.has(upper)) return false;
+      seen.add(upper);
+      return true;
+    }).map(item => item.trim());
+  };
+
+  const uniqueDepts = getUniqueCaseInsensitive(depts.map(d => d.DepartmentName));
+
   const displayedList = getDisplayedPasses();
+  const totalPages = Math.ceil(displayedList.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const reversedList = [...displayedList].reverse();
+  const paginatedList = reversedList.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="dashboard-container" style={{ paddingBottom: "50px" }}>
@@ -223,7 +247,7 @@ export default function PassManagement() {
                   <label className="filter-label">Department</label>
                   <select className="filter-control" value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
                       <option value="All">All Depts</option>
-                      {depts.map(d => <option key={d._id} value={d.DepartmentName}>{d.DepartmentName}</option>)}
+                      {uniqueDepts.map(dName => <option key={dName} value={dName}>{dName}</option>)}
                   </select>
               </div>
 
@@ -281,8 +305,8 @@ export default function PassManagement() {
                 </tr>
               </thead>
               <tbody>
-                {displayedList && displayedList.length > 0 ? (
-                  displayedList.reverse().map((pass) => (
+                {paginatedList && paginatedList.length > 0 ? (
+                  paginatedList.map((pass) => (
                      <tr key={pass._id}>
                       <td style={{ color: '#007bff', fontWeight: 'bold' }}>{pass.PassId || "0"}</td>
                       <td><strong>{pass.StudentId?.Name || "--"}</strong></td>
@@ -345,6 +369,33 @@ export default function PassManagement() {
             </table>
           </div>
         )}
+
+          {/* PAGINATION CONTROLS */}
+          {totalPages > 1 && (
+            <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum = currentPage - 2 + i;
+                if (currentPage <= 2) pageNum = i + 1;
+                else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                if (pageNum < 1 || pageNum > totalPages) return null;
+                return (
+                  <button 
+                    key={pageNum} 
+                    onClick={() => setCurrentPage(pageNum)} 
+                    className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                    style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+              <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+            </div>
+          )}
       </div>
     </div>
   );

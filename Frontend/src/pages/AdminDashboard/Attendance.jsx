@@ -19,6 +19,12 @@ export default function Attendance() {
   const [depts, setDepts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roomFilter, setRoomFilter] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, yearFilter, deptFilter, genderFilter, statusFilter, roomFilter]);
 
   const fetchDepts = async () => {
     try {
@@ -130,6 +136,46 @@ export default function Attendance() {
     setRoomFilter("All");
   };
 
+  const getUniqueCaseInsensitive = (arr) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      if (!item) return false;
+      const upper = item.trim().toUpperCase();
+      if (seen.has(upper)) return false;
+      seen.add(upper);
+      return true;
+    }).map(item => item.trim());
+  };
+
+  const uniqueDepts = getUniqueCaseInsensitive(depts.map(d => d.DepartmentName));
+
+  const filteredRecords = records.filter(rec => {
+    const matchesSearch = searchTerm === "" || 
+      (rec.StudentId?.Name && rec.StudentId.Name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+      (rec.StudentId?.RegisterNumber && String(rec.StudentId.RegisterNumber).toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (rec.StudentId?.RollNumber && String(rec.StudentId.RollNumber).toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    const matchesYear = yearFilter === "All" || calculateYear(rec.StudentId?.StartYear) === yearFilter;
+    
+    const matchesDept = deptFilter === "All" || 
+      (rec.StudentId?.DepartmentId?.DepartmentName && rec.StudentId.DepartmentId.DepartmentName.trim().toUpperCase() === deptFilter.toUpperCase());
+    
+    const matchesGender = genderFilter === "All" || 
+      (rec.StudentId?.Gender && rec.StudentId.Gender.trim().toUpperCase() === genderFilter.toUpperCase());
+    
+    const matchesStatus = statusFilter === "All" || 
+      (rec.Status && rec.Status.trim().toUpperCase() === statusFilter.toUpperCase());
+    
+    const matchesRoom = roomFilter === "All" || 
+      (rec.RoomId?.RoomNumber && String(rec.RoomId.RoomNumber) === roomFilter);
+    
+    return matchesSearch && matchesYear && matchesDept && matchesGender && matchesStatus && matchesRoom;
+  });
+
+  const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedRecords = filteredRecords.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="dashboard-card">
       <h3>Attendance Logs</h3>
@@ -196,7 +242,7 @@ export default function Attendance() {
                       <label className="filter-label">Department</label>
                       <select className="filter-control" value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
                           <option value="All">All Depts</option>
-                          {depts.map(d => <option key={d._id} value={d.DepartmentName}>{d.DepartmentName}</option>)}
+                          {uniqueDepts.map(dName => <option key={dName} value={dName}>{dName}</option>)}
                       </select>
                   </div>
 
@@ -251,19 +297,8 @@ export default function Attendance() {
           </tr>
         </thead>
          <tbody>
-          {records
-            .filter(rec => {
-              const matchesSearch = searchTerm === "" || 
-                (rec.StudentId?.Name || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-                (rec.StudentId?.RegisterNumber || "").includes(searchTerm);
-              const matchesYear = yearFilter === "All" || calculateYear(rec.StudentId?.StartYear) === yearFilter;
-              const matchesDept = deptFilter === "All" || rec.StudentId?.DepartmentId?.DepartmentName === deptFilter;
-              const matchesGender = genderFilter === "All" || rec.StudentId?.Gender === genderFilter;
-              const matchesStatus = statusFilter === "All" || rec.Status === statusFilter;
-              const matchesRoom = roomFilter === "All" || String(rec.RoomId?.RoomNumber) === roomFilter;
-              return matchesSearch && matchesYear && matchesDept && matchesGender && matchesStatus && matchesRoom;
-            })
-            .map((rec) => (
+          {paginatedRecords && paginatedRecords.length > 0 ? (
+            paginatedRecords.map((rec) => (
             <tr key={rec._id}>
               <td>{rec.StudentId?.Name || "Unknown"}</td>
               <td><span style={{ fontSize: '0.8rem', opacity: 0.7 }}>{rec.StudentId?.DepartmentId?.DepartmentName || "N/A"}</span></td>
@@ -285,7 +320,7 @@ export default function Attendance() {
                    background: rec.StudentId?.Status === "Active" ? "rgba(40, 167, 69, 0.1)" : "rgba(255, 255, 255, 0.05)",
                    color: rec.StudentId?.Status === "Active" ? "#28a745" : "rgba(255,255,255,0.4)"
                 }}>
-                  {rec.StudentId?.Status || "N/A"}
+                   {rec.StudentId?.Status || "N/A"}
                 </span>
               </td>
               <td>{new Date(rec.InDateTime).toLocaleString()}</td>
@@ -295,15 +330,42 @@ export default function Attendance() {
                 <button className="dash-btn danger" style={{ padding: "6px 12px", fontSize: "0.8rem", height: "auto" }} onClick={() => handleDelete(rec._id)}>Delete</button>
               </td>
             </tr>
-          ))}
-          {records.length === 0 && (
+          ))
+          ) : (
             <tr>
-              <td colSpan="9" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No attendance logs available</td>
+              <td colSpan="9" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No attendance logs found.</td>
             </tr>
           )}
         </tbody>
       </table>
       </div>
+
+      {/* PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum = currentPage - 2 + i;
+            if (currentPage <= 2) pageNum = i + 1;
+            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+            if (pageNum < 1 || pageNum > totalPages) return null;
+            return (
+              <button 
+                key={pageNum} 
+                onClick={() => setCurrentPage(pageNum)} 
+                className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+          <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+        </div>
+      )}
     </div>
   );
 }

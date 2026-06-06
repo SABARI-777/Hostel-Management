@@ -23,13 +23,13 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify transporter
-transporter.verify((err, success) => {
-  if (err) {
-    console.log("SMTP Error:", err.message);
-  } else {
-    console.log("SMTP Connected Successfully");
-  }
-});
+// transporter.verify((err, success) => {
+//   if (err) {
+//     console.log("SMTP Error:", err.message);
+//   } else {
+//     console.log("SMTP Connected Successfully");
+//   }
+// });
 
 export async function sendMail({ to, subject, text, html }) {
   const mailOptions = {

@@ -21,16 +21,19 @@ export const CreateNewUser = async (req, res) => {
       return res.status(400).json({ message: "Type is required" });
     }
 
-    // Strict Role-Based Password Security Check
-    const rolePasswords = {
-      "STUDENT": process.env.STUDENT_PASSWORD,
-      "CARETAKER": process.env.CARETAKER_PASSWORD,
-      "ADVISOR": process.env.ADVISOR_PASSWORD,
-      "ADMIN": process.env.ADMIN_PASSWORD,
-    };
+    // Strict Role-Based Password Security Check (Bypassed if requester is an ADMIN)
+    const isAdminRequester = req.user?.role === "ADMIN";
+    if (!isAdminRequester) {
+      const rolePasswords = {
+        "STUDENT": process.env.STUDENT_PASSWORD,
+        "CARETAKER": process.env.CARETAKER_PASSWORD,
+        "ADVISOR": process.env.ADVISOR_PASSWORD,
+        "ADMIN": process.env.ADMIN_PASSWORD,
+      };
 
-    if (Password !== rolePasswords[Type]) {
-      return res.status(401).json({ message: `Access Denied: Invalid password for ${Type} registration.` });
+      if (Password !== rolePasswords[Type]) {
+        return res.status(401).json({ message: `Access Denied: Invalid password for ${Type} registration.` });
+      }
     }
 
     const existingUser = await User.findOne({ Email });
@@ -61,7 +64,7 @@ export const GetUsers = async (req, res) => {
     const users = await User.find();
 
     if (!users || users.length === 0) {
-      return res.status(404).json({ message: "No user data found" });
+      return res.status(200).json({ message: "No user data found", data: [] });
     }
 
     return res.status(200).json({ message: "All user details", data: users });

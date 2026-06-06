@@ -10,6 +10,12 @@ export default function Departments() {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const fetchStats = async () => {
     try {
@@ -100,6 +106,16 @@ export default function Departments() {
     setEditId(null);
   };
 
+  const filteredDepartments = departments.filter(dept => 
+    searchTerm === "" || 
+    (dept.DepartmentName && dept.DepartmentName.toLowerCase().includes(searchTerm.toLowerCase())) || 
+    (dept.HodName && dept.HodName.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const totalPages = Math.ceil(filteredDepartments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDepartments = filteredDepartments.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="dashboard-card">
       <h3>Manage Departments</h3>
@@ -154,13 +170,8 @@ export default function Departments() {
           </tr>
         </thead>
         <tbody>
-          {departments
-            .filter(dept => 
-              searchTerm === "" || 
-              dept.DepartmentName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-              dept.HodName.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .map((dept) => (
+          {paginatedDepartments && paginatedDepartments.length > 0 ? (
+            paginatedDepartments.map((dept) => (
             <tr key={dept._id}>
               <td>{dept.DepartmentName}</td>
               <td>{dept.HodName}</td>
@@ -171,11 +182,11 @@ export default function Departments() {
                       .filter(([key]) => key !== 'total')
                       .map(([year, count]) => (
                         <span key={year} style={{ 
-                          fontSize: '0.75rem', 
-                          background: 'rgba(255,255,255,0.05)', 
-                          padding: '2px 6px', 
-                          borderRadius: '4px',
-                          color: count > 0 ? '#60a5fa' : 'rgba(255,255,255,0.3)'
+                           fontSize: '0.75rem', 
+                           background: 'rgba(255,255,255,0.05)', 
+                           padding: '2px 6px', 
+                           borderRadius: '4px',
+                           color: count > 0 ? '#60a5fa' : 'rgba(255,255,255,0.3)'
                         }}>
                           {year.split(' ')[0]}: <strong>{count}</strong>
                         </span>
@@ -188,14 +199,41 @@ export default function Departments() {
                 <button className="dash-btn danger" style={{ padding: "6px 12px", fontSize: "0.8rem", height: "auto" }} onClick={() => handleDelete(dept._id)}>Delete</button>
               </td>
             </tr>
-          ))}
-          {departments.length === 0 && (
+          ))
+          ) : (
             <tr>
-              <td colSpan="3" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No departments available</td>
+              <td colSpan="4" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No departments found.</td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {/* PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum = currentPage - 2 + i;
+            if (currentPage <= 2) pageNum = i + 1;
+            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+            if (pageNum < 1 || pageNum > totalPages) return null;
+            return (
+              <button 
+                key={pageNum} 
+                onClick={() => setCurrentPage(pageNum)} 
+                className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+          <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+        </div>
+      )}
     </div>
   );
 }

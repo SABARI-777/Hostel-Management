@@ -5,7 +5,7 @@ import Room from "../MODELS/RoomModel.js";
 import DepartmentModel from "../MODELS/DepartmentModel.js";
 import PlacementModel from "../MODELS/PlacementModel.js";
 import Caretaker from "../MODELS/Caretakermodel.js";
-import sendTestEmail from '../connecter/send.js'
+
 // ================== CREATE STUDENT ==================
 export const CreateNewStudent = async (req, res) => {
   try {
@@ -62,6 +62,22 @@ export const CreateNewStudent = async (req, res) => {
     const studentExist = await Student.findOne({ UserId: existingUser._id });
     if (studentExist) {
       return res.status(409).json({ message: "Student already registered." });
+    }
+
+    // Check RollNumber case-insensitively
+    const duplicateRoll = await Student.findOne({ 
+      RollNumber: { $regex: new RegExp(`^${RollNumber.trim()}$`, "i") } 
+    });
+    if (duplicateRoll) {
+      return res.status(409).json({ message: `Duplicate Roll Number: '${RollNumber}' is already assigned.` });
+    }
+
+    // Check RegisterNumber case-insensitively
+    const duplicateReg = await Student.findOne({ 
+      RegisterNumber: { $regex: new RegExp(`^${RegisterNumber.trim()}$`, "i") } 
+    });
+    if (duplicateReg) {
+      return res.status(409).json({ message: `Duplicate Register Number: '${RegisterNumber}' is already assigned.` });
     }
 
     // Find department
@@ -226,6 +242,24 @@ export const UpdateStudent = async (req, res) => {
         return res.status(400).json({ message: `Advisor '${AdvisorName}' not found.` });
       }
       advisorId = advisor._id;
+    }
+
+    // Check RollNumber case-insensitively (excluding current student)
+    const duplicateRoll = await Student.findOne({ 
+      _id: { $ne: _id },
+      RollNumber: { $regex: new RegExp(`^${RollNumber.trim()}$`, "i") } 
+    });
+    if (duplicateRoll) {
+      return res.status(409).json({ message: `Duplicate Roll Number: '${RollNumber}' is already assigned.` });
+    }
+
+    // Check RegisterNumber case-insensitively (excluding current student)
+    const duplicateReg = await Student.findOne({ 
+      _id: { $ne: _id },
+      RegisterNumber: { $regex: new RegExp(`^${RegisterNumber.trim()}$`, "i") } 
+    });
+    if (duplicateReg) {
+      return res.status(409).json({ message: `Duplicate Register Number: '${RegisterNumber}' is already assigned.` });
     }
 
     const updatePayload = {

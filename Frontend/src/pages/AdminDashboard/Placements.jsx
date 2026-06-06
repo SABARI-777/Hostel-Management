@@ -18,6 +18,12 @@ export default function Placements() {
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const fetchBatches = async () => {
     try {
@@ -124,6 +130,28 @@ export default function Placements() {
     setEditId(null);
   };
 
+  const getUniqueCaseInsensitive = (arr) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      if (!item) return false;
+      const upper = item.trim().toUpperCase();
+      if (seen.has(upper)) return false;
+      seen.add(upper);
+      return true;
+    }).map(item => item.trim());
+  };
+
+  const uniqueBatchNames = getUniqueCaseInsensitive(batches.map(b => b.BatchName));
+
+  const filteredBatches = batches.filter(batch => 
+    searchTerm === "" || 
+    (batch.BatchName && batch.BatchName.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const totalPages = Math.ceil(filteredBatches.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedBatches = filteredBatches.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="dashboard-card">
       <h3>Manage Placement Batches</h3>
@@ -141,8 +169,8 @@ export default function Placements() {
             required 
           />
           <datalist id="batch-suggestions">
-            {[...new Set(batches.map(b => b.BatchName))].map(b => (
-              <option key={b} value={b} />
+            {uniqueBatchNames.map(bName => (
+              <option key={bName} value={bName} />
             ))}
           </datalist>
         </div>
@@ -224,12 +252,8 @@ export default function Placements() {
           </tr>
         </thead>
         <tbody>
-          {batches
-            .filter(batch => 
-              searchTerm === "" || 
-              batch.BatchName.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-            .map((batch) => (
+          {paginatedBatches && paginatedBatches.length > 0 ? (
+            paginatedBatches.map((batch) => (
             <tr key={batch._id}>
               <td><strong style={{ letterSpacing: '1px' }}>{batch.BatchName}</strong></td>
               <td style={{ fontSize: '0.85rem' }}>{batch.Days?.join(", ")}</td>
@@ -251,14 +275,41 @@ export default function Placements() {
                 <button className="dash-btn danger" style={{ padding: "6px 12px", fontSize: "0.8rem", height: "auto" }} onClick={() => handleDelete(batch._id)}>Delete</button>
               </td>
             </tr>
-          ))}
-          {batches.length === 0 && (
+          ))
+          ) : (
             <tr>
-              <td colSpan="5" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No placement batches recorded</td>
+              <td colSpan="5" style={{ textAlign: "center", padding: "20px", color: "rgba(255,255,255,0.5)" }}>No placement batches found.</td>
             </tr>
           )}
         </tbody>
       </table>
+
+      {/* PAGINATION CONTROLS */}
+      {totalPages > 1 && (
+        <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+          <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            let pageNum = currentPage - 2 + i;
+            if (currentPage <= 2) pageNum = i + 1;
+            else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+            if (pageNum < 1 || pageNum > totalPages) return null;
+            return (
+              <button 
+                key={pageNum} 
+                onClick={() => setCurrentPage(pageNum)} 
+                className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+              >
+                {pageNum}
+              </button>
+            );
+          })}
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+          <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+          <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,6 +11,38 @@ export default function UserAccounts() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [newAccount, setNewAccount] = useState({ Email: "", Password: "", MobileNumber: "", Type: "STUDENT" });
+  const [createLoading, setCreateLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    setCreateLoading(true);
+    try {
+      const res = await fetch(`${API}/Admin/users/u/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAccount),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("User account created successfully!");
+        setNewAccount({ Email: "", Password: "", MobileNumber: "", Type: "STUDENT" });
+        setCurrentPage(1);
+        fetchAccounts();
+      } else {
+        alert("Creation failed: " + data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error occurred.");
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
   const fetchAccounts = async () => {
     try {
       setLoading(true);
@@ -90,6 +122,20 @@ export default function UserAccounts() {
     ADMIN: accounts.filter(a => a.Type === "ADMIN").length,
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const filteredAccounts = accounts.filter(acc => 
+    searchTerm === "" || 
+    acc.Email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedAccounts = filteredAccounts.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div className="dashboard-container" style={{ paddingBottom: "50px" }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -121,6 +167,65 @@ export default function UserAccounts() {
         </div>
       </div>
 
+      {/* CREATE ACCOUNT FORM */}
+      <div className="dashboard-card" style={{ marginBottom: "30px", background: 'rgba(255, 255, 255, 0.05)', borderRadius: '15px' }}>
+        <h3 style={{ color: "white", marginTop: 0 }}>Create User Account</h3>
+        <form onSubmit={handleCreateSubmit} className="dashboard-form" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
+          <div className="form-group">
+            <label>Email Address</label>
+            <input 
+              className="dash-input" 
+              type="email" 
+              placeholder="e.g. user@domain.com"
+              value={newAccount.Email} 
+              onChange={e => setNewAccount({...newAccount, Email: e.target.value})} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label>Mobile Number</label>
+            <input 
+              className="dash-input" 
+              type="text" 
+              placeholder="e.g. 9876543210"
+              value={newAccount.MobileNumber} 
+              onChange={e => setNewAccount({...newAccount, MobileNumber: e.target.value})} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label>Initial Password</label>
+            <input 
+              className="dash-input" 
+              type="password" 
+              placeholder="Min 4 characters"
+              value={newAccount.Password} 
+              onChange={e => setNewAccount({...newAccount, Password: e.target.value})} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label>Portal Access Role</label>
+            <select 
+              className="dash-input" 
+              value={newAccount.Type} 
+              onChange={e => setNewAccount({...newAccount, Type: e.target.value})} 
+              required
+            >
+              <option value="STUDENT">STUDENT</option>
+              <option value="CARETAKER">CARETAKER</option>
+              <option value="ADVISOR">ADVISOR</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ display: "flex", alignItems: "flex-end" }}>
+            <button type="submit" className="dash-btn" disabled={createLoading} style={{ width: "100%" }}>
+              {createLoading ? "Creating..." : "Create Account"}
+            </button>
+          </div>
+        </form>
+      </div>
+
       {/* SEARCH BAR */}
       <div className="filter-hub">
           <div className="filter-group search">
@@ -130,12 +235,12 @@ export default function UserAccounts() {
                 className="filter-control" 
                 placeholder="Search by Email (e.g. user@example.com)..." 
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
               />
           </div>
           {searchTerm && (
             <div className="filter-row">
-              <button className="clear-filters-btn" onClick={() => setSearchTerm("")}>RESET</button>
+              <button className="clear-filters-btn" onClick={() => { setSearchTerm(""); setCurrentPage(1); }}>RESET</button>
             </div>
           )}
       </div>
@@ -155,13 +260,8 @@ export default function UserAccounts() {
                 </tr>
               </thead>
               <tbody>
-                {accounts && accounts.length > 0 ? (
-                  accounts
-                  .filter(acc => 
-                    searchTerm === "" || 
-                    acc.Email.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-                  .map((acc) => (
+                {paginatedAccounts && paginatedAccounts.length > 0 ? (
+                  paginatedAccounts.map((acc) => (
                     <tr key={acc._id}>
                       <td><strong>{acc.Email}</strong></td>
                       <td>{acc.MobileNumber}</td>
@@ -207,6 +307,33 @@ export default function UserAccounts() {
                 )}
               </tbody>
             </table>
+
+            {/* PAGINATION CONTROLS */}
+            {totalPages > 1 && (
+              <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+                <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+                <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = currentPage - 2 + i;
+                  if (currentPage <= 2) pageNum = i + 1;
+                  else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                  if (pageNum < 1 || pageNum > totalPages) return null;
+                  return (
+                    <button 
+                      key={pageNum} 
+                      onClick={() => setCurrentPage(pageNum)} 
+                      className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                      style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+                <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+                <span style={{ color: 'white', marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

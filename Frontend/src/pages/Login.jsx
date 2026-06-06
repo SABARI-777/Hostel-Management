@@ -60,8 +60,8 @@ export default function Login() {
         <form onSubmit={submit} className="auth-input-group">
           <input
             className="auth-input"
-            placeholder="Email Address"
-            type="email"
+            placeholder="Email Address / Username"
+            type="text"
             required
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -77,10 +77,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="auth-footer">
-          Don't have an account? 
-          <Link to="/register" className="auth-link">Register</Link>
-        </div>
       </div>
     </div>
   );

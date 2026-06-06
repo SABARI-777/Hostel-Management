@@ -14,6 +14,12 @@ export default function StudentDashboard() {
   const [passwordStatus, setPasswordStatus] = useState(null);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [activeView, setActiveView] = useState("dashboard"); // "dashboard", "history", "profile"
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeView]);
   const calculateYear = (startYear) => {
     if (!startYear) return "N/A";
     const currentYear = new Date().getFullYear();
@@ -36,6 +42,32 @@ export default function StudentDashboard() {
   // Pass data
   const [myPasses, setMyPasses] = useState([]);
   const [showPassModal, setShowPassModal] = useState(false);
+
+  // Complaint data
+  const [complaints, setComplaints] = useState([]);
+  const [submittingComplaint, setSubmittingComplaint] = useState(false);
+  const [complaintForm, setComplaintForm] = useState({
+    RollOrRegNo: "",
+    RoomNo: "",
+    Year: "",
+    Department: "",
+    Name: "",
+    Description: "",
+    Date: new Date().toISOString().split("T")[0],
+    Time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+  });
+
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const [passForm, setPassForm] = useState({
     type: "home",
     Place: "",
@@ -100,6 +132,59 @@ export default function StudentDashboard() {
     } catch (err) { console.error("Error fetching passes:", err); }
   };
 
+  const fetchMyComplaints = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/Admin/complaints/student`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setComplaints(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching complaints:", err);
+    }
+  };
+
+  const handleComplaintSubmit = async (e) => {
+    e.preventDefault();
+    setSubmittingComplaint(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API}/Admin/complaints/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          Name: complaintForm.Name,
+          RollOrRegNo: complaintForm.RollOrRegNo,
+          RoomNo: complaintForm.RoomNo,
+          Year: complaintForm.Year,
+          Department: complaintForm.Department,
+          Description: complaintForm.Description,
+          ComplaintDate: complaintForm.Date,
+          Time: complaintForm.Time
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToast({ message: "Complaint submitted successfully!", type: "success" });
+        setComplaintForm(prev => ({ ...prev, Description: "" }));
+        fetchMyComplaints();
+      } else {
+        setToast({ message: data.message || "Failed to submit complaint.", type: "error" });
+      }
+    } catch (err) {
+      console.error("Error submitting complaint:", err);
+      setToast({ message: "An error occurred. Please try again.", type: "error" });
+    } finally {
+      setSubmittingComplaint(false);
+    }
+  };
+
   const checkProfile = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -110,6 +195,20 @@ export default function StudentDashboard() {
       if (data.success && data.data) {
         setStudentProfile(data.data);
         fetchMyPasses(data.data._id);
+        fetchMyComplaints();
+
+        const currentYr = new Date().getFullYear() - (Number(data.data.StartYear) || new Date().getFullYear()) + 1;
+        const yearSuffix = currentYr === 1 ? "st" : currentYr === 2 ? "nd" : currentYr === 3 ? "rd" : "th";
+        const defaultYear = currentYr > 0 && currentYr <= 4 ? `${currentYr}${yearSuffix} Year` : "I Year";
+
+        setComplaintForm(prev => ({
+          ...prev,
+          RollOrRegNo: data.data.RollNumber || data.data.RegisterNumber || "",
+          RoomNo: data.data.RoomId?.RoomNumber || "",
+          Year: defaultYear,
+          Department: data.data.DepartmentId?.DepartmentName || "",
+          Name: data.data.Name || "",
+        }));
       }
     } catch (err) { console.error("Error checking profile:", err); }
     finally { setLoading(false); }
@@ -358,7 +457,11 @@ export default function StudentDashboard() {
     );
   }
 
-  // 2. DASHBOARD VIEW
+  const sortedPasses = [...myPasses].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const totalPages = Math.ceil(sortedPasses.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedPasses = sortedPasses.slice(startIndex, startIndex + itemsPerPage);
+
   return (
     <div style={containerStyle}>
       <style>{`
@@ -376,6 +479,98 @@ export default function StudentDashboard() {
       `}</style>
 
       <div style={{ display: 'flex', minHeight: '100vh' }}>
+        {/* MACBOOK-STYLE SIDE NOTIFICATION TOAST */}
+        {toast && (
+          <div className="mac-notification-toast">
+            <div className="mac-toast-header">
+              <span className="mac-toast-app-icon">{toast.type === "success" ? "✅" : "❌"}</span>
+              <span className="mac-toast-title">Complaints Tracker</span>
+              <span className="mac-toast-time">now</span>
+              <button className="mac-toast-close" onClick={() => setToast(null)}>&times;</button>
+            </div>
+            <div className="mac-toast-body">
+              {toast.message}
+            </div>
+          </div>
+        )}
+
+        <style>{`
+          .mac-notification-toast {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 320px;
+            background: rgba(30, 41, 59, 0.85) !important;
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            padding: 12px 16px;
+            color: white !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            z-index: 10000;
+            animation: macSlideIn 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+          }
+
+          @keyframes macSlideIn {
+            from {
+              transform: translateX(125%);
+              opacity: 0;
+            }
+            to {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+
+          .mac-toast-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .mac-toast-app-icon {
+            font-size: 0.95rem;
+          }
+
+          .mac-toast-title {
+            flex-grow: 1;
+          }
+
+          .mac-toast-time {
+            color: rgba(255, 255, 255, 0.45);
+          }
+
+          .mac-toast-close {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.15rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.2s;
+          }
+
+          .mac-toast-close:hover {
+            color: white;
+          }
+
+          .mac-toast-body {
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+          }
+        `}</style>
+
         {/* Sidebar */}
         <aside style={{ width: '300px', background: 'rgba(255, 255, 255, 0.4)', backdropFilter: 'blur(30px)', borderRight: theme.border, padding: '50px 30px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ marginBottom: '60px' }}>
@@ -428,6 +623,21 @@ export default function StudentDashboard() {
               }}
             >
               My Profile
+            </div>
+            <div 
+              onClick={() => setActiveView("complaints")}
+              style={{ 
+                padding: '16px 20px', 
+                background: activeView === 'complaints' ? 'white' : 'transparent', 
+                borderRadius: '16px', 
+                color: activeView === 'complaints' ? theme.primary : theme.muted, 
+                fontWeight: '800', 
+                boxShadow: activeView === 'complaints' ? '0 4px 12px rgba(0,0,0,0.05)' : 'none', 
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Complaints
             </div>
             
             <button onClick={handleLogout} style={{ marginTop: "auto", background: "rgba(249, 115, 22, 0.05)", border: "none", padding: '16px 20px', color: theme.accent, borderRadius: '16px', cursor: "pointer", fontWeight: '800' }}>Sign Out</button>
@@ -512,7 +722,7 @@ export default function StudentDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {myPasses.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map((p, idx) => (
+                      {paginatedPasses.map((p, idx) => (
                         <tr key={p._id} className="premium-row" style={{ background: 'rgba(0,0,0,0.01)', borderRadius: '16px' }}>
                           <td style={{ padding: '20px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
                             <div style={{ fontWeight: '800', color: theme.primary, fontSize: '0.85rem' }}>{p.PassId}</div>
@@ -531,7 +741,9 @@ export default function StudentDashboard() {
                                 Out: {new Date(p.OutDateTime).toLocaleDateString()} {new Date(p.OutDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </div>
                             <div style={{ fontSize: '0.85rem', color: p.Status === 'IN' ? theme.success : theme.muted }}>
-                                {p.Status === 'IN' ? `In: ${new Date(p.ActualInDateTime).toLocaleTimeString()}` : `Exp: ${new Date(p.ExpectedInDateTime).toLocaleTimeString()}`}
+                                {p.Status === 'IN' 
+                                  ? (p.ActualInDateTime ? `In: ${new Date(p.ActualInDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "In: N/A")
+                                  : (p.ExpectedInDateTime ? `Exp: ${new Date(p.ExpectedInDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Exp: N/A")}
                             </div>
                           </td>
                           <td style={{ padding: '20px 25px', textAlign: 'right', borderTopRightRadius: '16px', borderBottomRightRadius: '16px' }}>
@@ -550,6 +762,33 @@ export default function StudentDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* PAGINATION CONTROLS */}
+              {totalPages > 1 && (
+                <div className="pagination-bar" style={{ display: 'flex', justifyContent: 'center', gap: '5px', marginTop: '20px', alignItems: 'center' }}>
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&laquo;</button>
+                  <button disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&lsaquo;</button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum = currentPage - 2 + i;
+                    if (currentPage <= 2) pageNum = i + 1;
+                    else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                    if (pageNum < 1 || pageNum > totalPages) return null;
+                    return (
+                      <button 
+                        key={pageNum} 
+                        onClick={() => setCurrentPage(pageNum)} 
+                        className={`dash-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        style={{ padding: '6px 12px', height: 'auto', background: currentPage === pageNum ? '#007bff' : 'rgba(255,255,255,0.1)' }}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&rsaquo;</button>
+                  <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(totalPages)} className="dash-btn" style={{ padding: '6px 12px', height: 'auto' }}>&raquo;</button>
+                  <span style={{ color: theme.text, marginLeft: '10px', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
                 </div>
               )}
             </div>
@@ -603,6 +842,110 @@ export default function StudentDashboard() {
                       )}
                       <button type="submit" disabled={isChangingPassword} style={{ ...btnStyle, background: theme.accent }}>Update Secret</button>
                     </form>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeView === 'complaints' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '40px' }}>
+              {/* FILE COMPLAINT FORM */}
+              <div style={cardStyle}>
+                <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: '800', color: '#1e293b', marginBottom: '30px' }}>File a Complaint</h3>
+                <form onSubmit={handleComplaintSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Full Name</label>
+                      <input type="text" required value={complaintForm.Name} onChange={e => setComplaintForm({...complaintForm, Name: e.target.value})} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Roll / Reg Number</label>
+                      <input type="text" required value={complaintForm.RollOrRegNo} onChange={e => setComplaintForm({...complaintForm, RollOrRegNo: e.target.value})} style={inputStyle} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Current Year</label>
+                      <input type="text" required value={complaintForm.Year} onChange={e => setComplaintForm({...complaintForm, Year: e.target.value})} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Department</label>
+                      <input type="text" required value={complaintForm.Department} onChange={e => setComplaintForm({...complaintForm, Department: e.target.value})} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Room Number</label>
+                      <input type="text" required value={complaintForm.RoomNo} onChange={e => setComplaintForm({...complaintForm, RoomNo: e.target.value})} style={inputStyle} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Complaint Date</label>
+                      <input type="date" required value={complaintForm.Date} onChange={e => setComplaintForm({...complaintForm, Date: e.target.value})} style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Time</label>
+                      <input type="text" required value={complaintForm.Time} onChange={e => setComplaintForm({...complaintForm, Time: e.target.value})} style={inputStyle} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ color: theme.muted, fontSize: '0.7rem', marginBottom: '8px', display: 'block', fontWeight: '800', textTransform: 'uppercase' }}>Problem Description</label>
+                    <textarea 
+                      placeholder="Please describe your problem in detail..." 
+                      required 
+                      rows={4} 
+                      value={complaintForm.Description} 
+                      onChange={e => setComplaintForm({...complaintForm, Description: e.target.value})} 
+                      style={{ ...inputStyle, width: '100%', resize: 'vertical', minHeight: '100px', fontFamily: 'inherit' }} 
+                    />
+                  </div>
+
+                  <button type="submit" disabled={submittingComplaint} style={btnStyle}>
+                    {submittingComplaint ? "Submitting..." : "Submit Complaint"}
+                  </button>
+                </form>
+              </div>
+
+              {/* COMPLAINTS HISTORY LIST */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={cardStyle}>
+                  <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: '800', color: '#1e293b', marginBottom: '25px' }}>Complaint History</h3>
+                  
+                  {complaints.length === 0 ? (
+                    <div style={{ color: theme.muted, fontSize: '0.9rem', textAlign: 'center', padding: '30px 0' }}>No complaints filed yet.</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '400px', overflowY: 'auto', paddingRight: '5px' }}>
+                      {complaints.map(c => (
+                        <div key={c._id} style={{ padding: '15px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.05)', background: 'rgba(255,255,255,0.2)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: theme.muted }}>
+                              {new Date(c.ComplaintDate).toLocaleDateString()} at {c.Time}
+                            </span>
+                            <span style={{ 
+                              padding: '4px 8px', 
+                              borderRadius: '6px', 
+                              background: c.Status === "RESOLVED" ? 'rgba(5, 150, 105, 0.1)' : 'rgba(249, 115, 22, 0.1)', 
+                              color: c.Status === "RESOLVED" ? theme.success : theme.accent, 
+                              fontWeight: '800', 
+                              fontSize: '0.65rem' 
+                            }}>
+                              {c.Status}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.9rem', color: '#1e293b', fontWeight: '600', wordBreak: 'break-word' }}>
+                            {c.Description}
+                          </div>
+                          {c.RoomNo && (
+                            <div style={{ fontSize: '0.75rem', color: theme.muted, fontWeight: '700', marginTop: '6px' }}>
+                              Room: {c.RoomNo}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -57,7 +57,7 @@ const EmergencyPassSchema = new mongoose.Schema(
     EntryType: {
       type: String,
       required: true,
-      enum: ["MANUAL", "BIOMATRIC"],
+      enum: ["MANUAL", "BIOMETRIC", "BIOMATRIC"],
     },
     StudentId: {
       type: mongoose.Schema.Types.ObjectId,
