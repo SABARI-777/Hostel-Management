@@ -43,20 +43,27 @@ export default function Register() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card" style={{ textAlign: "center" }}>
-        <div className="auth-header">
-          <h2>Public Registration Disabled</h2>
-          <p style={{ color: "#f87171", fontWeight: "bold", marginTop: "15px", fontSize: "1.1rem" }}>
+      <div className="auth-card" style={{ textAlign: "center", alignItems: "center" }}>
+        <div className="auth-header" style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div className="auth-notice-icon" style={{ margin: "0 auto 10px auto" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h2 style={{ fontSize: "1.8rem", color: "#ffffff", fontWeight: "700", margin: "0 0 5px 0" }}>Registration Closed</h2>
+          <p style={{ color: "#ff8b8b", fontWeight: "bold", marginTop: "10px", fontSize: "1.05rem" }}>
             Self-registration is not allowed.
           </p>
-          <p style={{ opacity: 0.8, fontSize: "0.95rem", marginTop: "10px" }}>
-            Please contact the Hostel Administrator to create your user login and assign your portal access details.
+          <p style={{ opacity: 0.8, fontSize: "0.95rem", marginTop: "15px", lineHeight: "1.6" }}>
+            Please contact the Hostel Administrator or Warden to create your user login and assign your portal access details.
           </p>
         </div>
 
-        <div className="auth-footer" style={{ marginTop: "30px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "20px" }}>
-          Already have account credentials? 
-          <Link to="/login" className="auth-link" style={{ marginLeft: "5px" }}>Login Here</Link>
+        <div className="auth-footer" style={{ width: "100%", marginTop: "20px", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "25px" }}>
+          <Link to="/login" className="auth-button" style={{ display: "block", textDecoration: "none", textAlign: "center", margin: "0" }}>
+            Login Here
+          </Link>
         </div>
       </div>
     </div>

@@ -4,7 +4,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.8) 100%), url('/karpagam_tech.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   position: fixed;
   top: 0;
   left: 0;
@@ -145,3 +148,165 @@
     transform: translateY(0);
   }
 }
+
+/* Split Card Layout for Registration Notice */
+.auth-card-split {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 850px;
+  display: flex;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-card-image-section {
+  flex: 1.3;
+  position: relative;
+  background-image: url('/karpagam_tech.png');
+  background-size: cover;
+  background-position: center;
+  min-height: 400px;
+}
+
+.auth-card-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(30, 60, 114, 0.8) 0%, rgba(42, 82, 152, 0.85) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 40px;
+  color: white;
+  text-align: left;
+}
+
+.auth-card-image-overlay h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.auth-card-image-overlay p {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.auth-card-info-section {
+  flex: 1;
+  padding: 40px 35px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.auth-notice-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1.5px solid rgba(239, 68, 68, 0.4);
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: #f87171;
+}
+
+.auth-notice-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 15px;
+}
+
+.auth-notice-desc {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.auth-notice-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #1e3c72;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-notice-btn:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(255, 255, 255, 0.3);
+}
+
+.auth-notice-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive design for split card */
+@media (max-width: 768px) {
+  .auth-card-split {
+    flex-direction: column;
+    max-width: 450px;
+    margin: 20px;
+  }
+  
+  .auth-card-image-section {
+    flex: none;
+    height: 220px;
+    min-height: auto;
+  }
+  
+  .auth-card-image-overlay {
+    padding: 20px;
+  }
+  
+  .auth-card-image-overlay h1 {
+    font-size: 1.6rem;
+  }
+  
+  .auth-card-image-overlay p {
+    font-size: 0.85rem;
+  }
+  
+  .auth-card-info-section {
+    padding: 30px 20px;
+  }
+  
+  .auth-notice-title {
+    font-size: 1.4rem;
+  }
+  
+  .auth-notice-desc {
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+}
+
