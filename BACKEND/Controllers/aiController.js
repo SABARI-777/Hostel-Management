@@ -1,4 +1,4 @@
-import { askGemini } from "../utils/gemini.js";
+import { askOpenRouter } from "../utils/openRouter.js";
 import Student from "../MODELS/Studentmodel.js";
 import Caretaker from "../MODELS/Caretakermodel.js";
 import Advisor from "../MODELS/AdvisorModel.js";
@@ -346,7 +346,7 @@ ${databaseContext}
 Question: "${question}"
 Answer:`;
 
-    const answer = await askGemini(systemPrompt);
+    const answer = await askOpenRouter(systemPrompt);
 
     return res.status(200).json({
       success: true,

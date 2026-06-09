@@ -7,7 +7,7 @@ export default function AiChatBot() {
   const [messages, setMessages] = useState([
     {
       sender: "ai",
-      text: "Hello! I am your Gemini AI Hostel Assistant. Ask me anything about your housing block, passes, profile, or hostel statistics!"
+      text: "Hello! I am your AI Hostel Assistant. Ask me anything about your housing block, passes, profile, or hostel statistics!"
     }
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -60,7 +60,7 @@ export default function AiChatBot() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { sender: "ai", text: data.message || "Failed to fetch response from Gemini. Please try again." }
+          { sender: "ai", text: data.message || "Failed to fetch response from AI Assistant. Please try again." }
         ]);
       }
     } catch (err) {
@@ -104,7 +104,7 @@ export default function AiChatBot() {
     <div className="ai-chatbot-container">
       {/* Floating Chat Button */}
       {!isOpen && (
-        <button className="chatbot-toggle-btn" onClick={() => setIsOpen(true)} title="Ask Gemini AI">
+        <button className="chatbot-toggle-btn" onClick={() => setIsOpen(true)} title="Ask AI Assistant">
           <div className="ai-pulse-ring"></div>
           <svg className="chatbot-svg-icon" viewBox="0 0 24 24" width="28" height="28">
             <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12c0 1.54.36 2.98 1 4.28L1.61 21.39c-.38.76.36 1.5 1.12 1.12l5.11-1.39C9.02 21.64 10.46 22 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" />
@@ -119,7 +119,7 @@ export default function AiChatBot() {
             <div className="chatbot-title-group">
               <div className="chatbot-status-dot"></div>
               <div>
-                <h4 className="chatbot-title">Gemini AI</h4>
+                <h4 className="chatbot-title">AI Assistant</h4>
                 <p className="chatbot-subtitle">Hostel Companion • {userRole}</p>
               </div>
             </div>
