@@ -65,18 +65,25 @@ export const chatWithAI = async (req, res) => {
       const totalEmergencyPasses = await EmergencyPass.countDocuments();
       const totalPassesCount = totalOutPasses + totalGeneralPasses + totalEmergencyPasses;
 
-      // Fetch all students
+      // Fetch all students, populating placement details
       const students = await Student.find()
         .populate("RoomId")
         .populate("DepartmentId")
-        .populate("AdvisorId");
+        .populate("AdvisorId")
+        .populate("PlacementId");
 
-      // Fetch passes (sorted by newest, limit to 100 per type for token capacity safety)
+      // Fetch all caretakers
+      const caretakers = await Caretaker.find().populate("UserID");
+
+      // Fetch all advisors
+      const advisors = await Advisor.find().populate("UserId").populate("DepartmentId");
+
+      // Fetch passes (sorted by newest, limit to 100 per type for token safety)
       const outPasses = await OutPass.find().populate("StudentId").sort({ createdAt: -1 }).limit(100);
       const genPasses = await GeneralPass.find().populate("StudentId").sort({ createdAt: -1 }).limit(100);
       const emPasses = await EmergencyPass.find().populate("StudentId").sort({ createdAt: -1 }).limit(100);
 
-      // Fetch attendance logs (limit to 200 for token capacity safety)
+      // Fetch attendance logs (limit to 200 for token safety)
       const attendanceLogs = await AttendanceDetails.find().populate("StudentId").sort({ createdAt: -1 }).limit(200);
 
       // Fetch complaints
@@ -99,7 +106,36 @@ export const chatWithAI = async (req, res) => {
         LateEntryCount: s.LateEntryCount || 0,
         Status: s.Status,
         ParentEmail: s.ParentEmail || "N/A",
-        ParentMobile: s.ParentMobileNumber || "N/A"
+        ParentMobile: s.ParentMobileNumber || "N/A",
+        Placement: s.PlacementId ? {
+          BatchName: s.PlacementId.BatchName,
+          Status: s.PlacementId.Status,
+          ClassTiming: `${s.PlacementId.ClassTiming?.Start || ""} - ${s.PlacementId.ClassTiming?.End || ""}`,
+          Days: s.PlacementId.Days
+        } : "N/A"
+      }));
+
+      const caretakersList = caretakers.map(c => ({
+        Name: c.Name,
+        HostelBlock: c.HostelBlock,
+        Status: c.Status,
+        Email: c.UserID?.Email || "N/A",
+        MobileNumber: c.UserID?.MobileNumber || "N/A"
+      }));
+
+      const advisorsList = advisors.map(a => ({
+        Name: a.Name,
+        Designation: a.Designation,
+        DepartmentName: a.DepartmentId?.DepartmentName || "N/A",
+        Email: a.UserId?.Email || "N/A",
+        MobileNumber: a.UserId?.MobileNumber || "N/A"
+      }));
+
+      const roomsList = allRooms.map(r => ({
+        RoomNumber: r.RoomNumber,
+        HostelBlock: r.HostelBlock,
+        Capacity: r.Capacity,
+        Occupancy: r.Occupancy
       }));
 
       const passesList = [
@@ -135,7 +171,16 @@ export const chatWithAI = async (req, res) => {
 - Total Gate Passes: ${totalPassesCount} (Outpass: ${totalOutPasses}, General: ${totalGeneralPasses}, Emergency: ${totalEmergencyPasses})
 - Total Complaints: ${totalComplaints} (${pendingComplaints} pending, ${resolvedComplaints} resolved)
 
-=== DETAILED STUDENT PROFILES ===
+=== CARETAKERS / WARDENS LIST ===
+${JSON.stringify(caretakersList, null, 2)}
+
+=== ADVISORS LIST ===
+${JSON.stringify(advisorsList, null, 2)}
+
+=== ROOM DETAILS & OCCUPANCY ===
+${JSON.stringify(roomsList, null, 2)}
+
+=== DETAILED STUDENT PROFILES (INCLUDES PLACEMENT & ADVISOR) ===
 ${JSON.stringify(studentsList, null, 2)}
 
 === DETAILED PASSES RECORD (RECENT PASSES) ===
@@ -152,7 +197,11 @@ ${JSON.stringify(complaintsList, null, 2)}
       const student = await Student.findOne({ UserId: userId })
         .populate("RoomId")
         .populate("DepartmentId")
-        .populate("AdvisorId");
+        .populate({
+          path: "AdvisorId",
+          populate: { path: "UserId" }
+        })
+        .populate("PlacementId");
 
       if (student) {
         userName = student.Name;
@@ -184,6 +233,26 @@ ${JSON.stringify(complaintsList, null, 2)}
           Status: c.Status
         }));
 
+        // Fetch caretaker for this student's hostel block
+        let caretakerInfo = { Name: "N/A", Email: "N/A", Mobile: "N/A" };
+        if (student.RoomId && student.RoomId.HostelBlock) {
+          const caretaker = await Caretaker.findOne({ HostelBlock: student.RoomId.HostelBlock }).populate("UserID");
+          if (caretaker) {
+            caretakerInfo = {
+              Name: caretaker.Name,
+              Email: caretaker.UserID?.Email || "N/A",
+              Mobile: caretaker.UserID?.MobileNumber || "N/A"
+            };
+          }
+        }
+
+        // Fetch roommates (other students in same RoomId)
+        let roommates = [];
+        if (student.RoomId) {
+          const roommateRecords = await Student.find({ RoomId: student.RoomId._id, _id: { $ne: student._id } });
+          roommates = roommateRecords.map(r => r.Name);
+        }
+
         databaseContext = `
 Student Profile Details:
 - Name: ${student.Name}
@@ -194,11 +263,23 @@ Student Profile Details:
 - Register Number: ${student.RegisterNumber}
 - Department: ${student.DepartmentId?.DepartmentName || "N/A"}
 - Advisor Name: ${student.AdvisorId?.Name || "N/A"}
-- Room Number: ${student.RoomId?.RoomNumber || "N/A"} (Hostel Block: ${student.RoomId?.HostelBlock || "N/A"})
+- Advisor Email: ${student.AdvisorId?.UserId?.Email || "N/A"}
+- Advisor Mobile: ${student.AdvisorId?.UserId?.MobileNumber || "N/A"}
+- Room Number: ${student.RoomId?.RoomNumber || "N/A"}
+- Hostel Block: ${student.RoomId?.HostelBlock || "N/A"}
+- Roommates: ${roommates.length > 0 ? roommates.join(", ") : "No roommates listed."}
 - Parent Correspondence Email: ${student.ParentEmail || "N/A"}
 - Parent Contact Mobile: ${student.ParentMobileNumber || "N/A"}
 - Total Personal Late Entry Record Count: ${student.LateEntryCount || 0}
 - Current Status: ${student.Status}
+- Placement Training Batch: ${student.PlacementId?.BatchName || "N/A"}
+- Placement Status: ${student.PlacementId?.Status || "N/A"}
+- Placement Class Timings: ${student.PlacementId?.ClassTiming?.Start || ""} - ${student.PlacementId?.ClassTiming?.End || ""} on ${student.PlacementId?.Days ? student.PlacementId.Days.join(", ") : "N/A"}
+
+=== BLOCK CARETAKER CONTACT INFO ===
+- Caretaker Name: ${caretakerInfo.Name}
+- Caretaker Email: ${caretakerInfo.Email}
+- Caretaker Mobile: ${caretakerInfo.Mobile}
 
 === YOUR PASS REQUEST HISTORY ===
 ${JSON.stringify(passHistory, null, 2)}
@@ -214,14 +295,18 @@ ${JSON.stringify(studentComplaintsList, null, 2)}
       }
 
     } else if (userRole === "CARETAKER") {
-      const caretaker = await Caretaker.findOne({ UserID: userId });
+      const caretaker = await Caretaker.findOne({ UserID: userId }).populate("UserID");
       
       if (caretaker) {
         userName = caretaker.Name;
         
         const roomsInBlock = await Room.find({ HostelBlock: caretaker.HostelBlock });
         const roomIds = roomsInBlock.map(r => r._id);
-        const studentsInBlock = await Student.find({ RoomId: { $in: roomIds } }).populate("RoomId").populate("DepartmentId");
+        const studentsInBlock = await Student.find({ RoomId: { $in: roomIds } })
+          .populate("RoomId")
+          .populate("DepartmentId")
+          .populate("AdvisorId")
+          .populate("PlacementId");
         const studentIds = studentsInBlock.map(s => s._id);
 
         const outPasses = await OutPass.find({ StudentId: { $in: studentIds } }).populate("StudentId");
@@ -242,21 +327,37 @@ ${JSON.stringify(studentComplaintsList, null, 2)}
           EntryType: a.EntryType
         }));
 
+        const roomsList = roomsInBlock.map(r => ({
+          RoomNumber: r.RoomNumber,
+          Capacity: r.Capacity,
+          Occupancy: r.Occupancy
+        }));
+
         databaseContext = `
 Block ${caretaker.HostelBlock} Caretaker Details:
 - Name: ${caretaker.Name}
-- Block: ${caretaker.HostelBlock}
+- Block Managed: ${caretaker.HostelBlock}
+- Email: ${caretaker.UserID?.Email || "N/A"}
+- Mobile: ${caretaker.UserID?.MobileNumber || "N/A"}
 
 === BLOCK STATISTICS ===
 - Total Rooms: ${roomsInBlock.length}
 - Total Block Students: ${studentsInBlock.length}
 
-=== BLOCK STUDENTS PROFILES ===
+=== BLOCK ROOMS LAYOUT ===
+${JSON.stringify(roomsList, null, 2)}
+
+=== BLOCK STUDENTS PROFILES (INCLUDES PLACEMENT & ADVISOR) ===
 ${JSON.stringify(studentsInBlock.map(s => ({
   Name: s.Name,
+  Gender: s.Gender,
+  RollNumber: s.RollNumber,
+  Section: s.Section,
   Room: s.RoomId?.RoomNumber,
-  Department: s.DepartmentId?.DepartmentName,
-  LateEntryCount: s.LateEntryCount || 0
+  Advisor: s.AdvisorId?.Name || "N/A",
+  LateEntryCount: s.LateEntryCount || 0,
+  PlacementBatch: s.PlacementId?.BatchName || "N/A",
+  PlacementStatus: s.PlacementId?.Status || "N/A"
 })), null, 2)}
 
 === BLOCK PASSES RECORD ===
@@ -270,11 +371,14 @@ ${JSON.stringify(attendanceList, null, 2)}
       }
 
     } else if (userRole === "ADVISOR") {
-      const advisor = await Advisor.findOne({ UserId: userId }).populate("DepartmentId");
+      const advisor = await Advisor.findOne({ UserId: userId }).populate("DepartmentId").populate("UserId");
       
       if (advisor) {
         userName = advisor.Name;
-        const studentsAdvised = await Student.find({ AdvisorId: advisor._id }).populate("RoomId").populate("DepartmentId");
+        const studentsAdvised = await Student.find({ AdvisorId: advisor._id })
+          .populate("RoomId")
+          .populate("DepartmentId")
+          .populate("PlacementId");
         const studentIds = studentsAdvised.map(s => s._id);
 
         const outPasses = await OutPass.find({ StudentId: { $in: studentIds } }).populate("StudentId");
@@ -295,11 +399,25 @@ ${JSON.stringify(attendanceList, null, 2)}
           EntryType: a.EntryType
         }));
 
+        // Fetch caretakers list
+        const caretakers = await Caretaker.find().populate("UserID");
+        const caretakersList = caretakers.map(c => ({
+          Name: c.Name,
+          HostelBlock: c.HostelBlock,
+          Email: c.UserID?.Email || "N/A",
+          MobileNumber: c.UserID?.MobileNumber || "N/A"
+        }));
+
         databaseContext = `
 Advisor Profile:
 - Name: ${advisor.Name}
 - Designation: ${advisor.Designation}
 - Department: ${advisor.DepartmentId?.DepartmentName}
+- Email: ${advisor.UserId?.Email || "N/A"}
+- Mobile: ${advisor.UserId?.MobileNumber || "N/A"}
+
+=== HOSTEL CARETAKERS CONTACT INFO ===
+${JSON.stringify(caretakersList, null, 2)}
 
 === ADVISED STUDENTS PROFILES ===
 ${JSON.stringify(studentsAdvised.map(s => ({
@@ -307,8 +425,11 @@ ${JSON.stringify(studentsAdvised.map(s => ({
   RollNumber: s.RollNumber,
   Section: s.Section,
   Room: s.RoomId?.RoomNumber,
+  Block: s.RoomId?.HostelBlock || "N/A",
   LateEntryCount: s.LateEntryCount || 0,
-  Status: s.Status
+  Status: s.Status,
+  PlacementBatch: s.PlacementId?.BatchName || "N/A",
+  PlacementStatus: s.PlacementId?.Status || "N/A"
 })), null, 2)}
 
 === ADVISED STUDENTS PASSES ===
