@@ -82,22 +82,95 @@ export default function AiChatBot() {
   // Safe helper to render basic markdown bold/lists/newlines in chat messages
   const renderFormattedText = (text) => {
     if (!text) return "";
-    return text.split("\n").map((line, idx) => {
-      let formattedLine = line;
-      // Bold Markdown replacement: **text** -> <strong>text</strong>
-      const boldRegex = /\*\*(.*?)\*\*/g;
-      formattedLine = formattedLine.replace(boldRegex, "<strong>$1</strong>");
 
-      // Bullet List replacement: - text -> &bull; text
-      if (formattedLine.trim().startsWith("- ")) {
-        return (
-          <div key={idx} className="chat-bullet" style={{ paddingLeft: "15px", marginBottom: "5px" }} dangerouslySetInnerHTML={{ __html: `&bull; ${formattedLine.trim().substring(2)}` }} />
-        );
+    // 1. Escape HTML to prevent XSS
+    let html = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    // 2. Code blocks: ```code``` -> <pre class="chat-code-block"><code>code</code></pre>
+    html = html.replace(/```([\s\S]*?)```/g, '<pre class="chat-code-block"><code>$1</code></pre>');
+
+    // 3. Inline code: `code` -> <code>code</code>
+    html = html.replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>');
+
+    // 4. Headers: ### Title -> <h3>Title</h3>
+    html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*?)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^# (.*?)$/gm, '<h5>$1</h5>');
+
+    // 5. Bold: **text** or __text__ -> <strong>text</strong>
+    html = html.replace(/\*\*([\s\S]*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__([\s\S]*?)__/g, '<strong>$1</strong>');
+
+    // 6. Italics: *text* or _text_ -> <em>text</em>
+    html = html.replace(/\*([\s\S]*?)\*/g, '<em>$1</em>');
+    html = html.replace(/_([\s\S]*?)_/g, '<em>$1</em>');
+
+    // 7. Unordered lists: lines starting with "- " or "* " (with optional spaces) -> <li>
+    // We group consecutive list items together into <ul>
+    const lines = html.split("\n");
+    let inList = false;
+    let inNumList = false;
+    const processedLines = [];
+
+    for (let line of lines) {
+      const trimmed = line.trim();
+      
+      // Unordered list item matches starting with "- ", "* ", or "• "
+      const ulMatch = trimmed.match(/^[-*•]\s+(.*)$/);
+      // Ordered list item
+      const olMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+
+      if (ulMatch) {
+        if (inNumList) {
+          processedLines.push("</ol>");
+          inNumList = false;
+        }
+        if (!inList) {
+          processedLines.push('<ul class="chat-list">');
+          inList = true;
+        }
+        processedLines.push(`<li>${ulMatch[1]}</li>`);
+      } else if (olMatch) {
+        if (inList) {
+          processedLines.push("</ul>");
+          inList = false;
+        }
+        if (!inNumList) {
+          processedLines.push('<ol class="chat-num-list">');
+          inNumList = true;
+        }
+        processedLines.push(`<li>${olMatch[2]}</li>`);
+      } else {
+        if (inList) {
+          processedLines.push("</ul>");
+          inList = false;
+        }
+        if (inNumList) {
+          processedLines.push("</ol>");
+          inNumList = false;
+        }
+        
+        if (trimmed) {
+          // Normal paragraph
+          processedLines.push(`<p class="chat-paragraph">${line}</p>`);
+        } else {
+          // Empty line
+          processedLines.push('<div class="chat-spacer"></div>');
+        }
       }
-      return (
-        <p key={idx} style={{ margin: "0 0 8px 0" }} dangerouslySetInnerHTML={{ __html: formattedLine }} />
-      );
-    });
+    }
+
+    if (inList) processedLines.push("</ul>");
+    if (inNumList) processedLines.push("</ol>");
+
+    html = processedLines.join("\n");
+
+    return (
+      <div className="chat-message-html" dangerouslySetInnerHTML={{ __html: html }} />
+    );
   };
 
   return (
